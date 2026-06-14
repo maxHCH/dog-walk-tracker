@@ -1,0 +1,19 @@
+<script setup lang="ts">
+const user = useSupabaseUser()
+const route = useRoute()
+const { loadActive } = useWalk()
+
+// 登入後恢復進行中的散步（App 重開繼續計時，§5.1）
+watch(user, (u) => {
+  if (u) loadActive().catch(() => {})
+}, { immediate: true })
+
+const showNav = computed(() => !!user.value && route.path !== '/login')
+</script>
+
+<template>
+  <div class="mx-auto min-h-screen max-w-md" :class="showNav ? 'pb-20' : ''">
+    <NuxtPage />
+    <BottomNav v-if="showNav" />
+  </div>
+</template>
