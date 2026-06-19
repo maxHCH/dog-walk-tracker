@@ -7,9 +7,20 @@ Nuxt 4 + Vue 3 + Tailwind + Supabase。
 
 | 階段 | 狀態 | 內容 |
 |------|------|------|
-| **Phase 1** | ✅ 已完成 | Email/Google 登入、散步計時、一鍵便便記錄、今日摘要首頁 |
-| Phase 2 | ⏳ 規劃 | 歷史列表、7 天統計、性狀長條圖（`/history` 佔位頁已建） |
+| **Phase 1** | ✅ 已完成 | Email 登入、散步計時、一鍵便便記錄、今日摘要首頁 |
+| **Phase 2** | ✅ 已完成 | 歷史列表（依日期分組）、近 7 天趨勢/性狀/顏色長條圖、刪除散步、GPS 距離/路線追蹤、結束散步備註、**PWA（可安裝＋離線）** |
 | Phase 3 | ⏳ 規劃 | Claude AI 週報、異常警示（`/analysis` 佔位頁已建） |
+
+## PWA
+
+以 `@vite-pwa/nuxt` 提供可安裝與離線能力：
+
+- **可安裝**：`<VitePwaManifest />`（於 `app.vue`）注入 manifest，icon 於 `public/pwa-*.png`。
+  Android/桌面會跳出安裝提示（`PwaPrompt.vue`）；iOS 請用 Safari「加入主畫面」。
+- **離線**：SW precache app shell（JS/CSS/icon）；導覽走 NetworkFirst，造訪過的頁面離線可開。
+  SSR 無預先產生的 `index.html`，故停用 `navigateFallback`（見 `nuxt.config.ts` 註解）。
+- **icon 產生**（macOS，無需額外套件）：`qlmanage` 渲染 `public/icon.svg` → `sips` 縮放各尺寸。
+- GPS 為純前端 `watchPosition`，離線可用；未授權定位時自動降級為僅計時。
 
 ## 環境設定
 
@@ -52,10 +63,12 @@ Nuxt 4 + Vue 3 + Tailwind + Supabase。
 
 ```
 app/
-├── components/   WalkTimer, PoopForm, PoopPill, StatsCard, BottomNav
-├── composables/  useWalk, usePoop, useToday
+├── components/   WalkTimer, WalkEndSheet, PoopForm, PoopPill, StatsCard, BottomNav,
+│                 WeekTrendChart, DistChart, RouteThumb, PwaPrompt
+├── composables/  useWalk, usePoop, useToday, useGeo, useHistory, useStats
 ├── pages/        index, walk, history, analysis, login, confirm
 ├── types/        database.ts（Supabase 型別）
-└── utils/        poop.ts（性狀/顏色設定）, time.ts
+└── utils/        poop.ts（性狀/顏色設定）, time.ts, geo.ts（haversine/路線投影）
+public/           icon.svg, pwa-192/512, apple-touch-icon, favicon
 supabase/migrations/001_init.sql
 ```

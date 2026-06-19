@@ -13,7 +13,10 @@ const showNav = computed(() => !!user.value && route.path !== '/login')
 
 <template>
   <div class="mx-auto min-h-screen max-w-md" :class="showNav ? 'pb-20' : ''">
+    <!-- 注入 <link rel="manifest">，讓 App 可安裝（@vite-pwa/nuxt 不會自動加） -->
+    <VitePwaManifest />
     <NuxtPage />
     <BottomNav v-if="showNav" />
+    <PwaPrompt v-if="user" />
   </div>
 </template>

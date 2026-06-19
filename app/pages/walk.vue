@@ -1,25 +1,54 @@
 <script setup lang="ts">
 import type { PoopInput } from '~/composables/usePoop'
 import type { PoopLog } from '~/types/database'
+import { diffSec } from '~/utils/time'
+import { formatDistance } from '~/utils/geo'
 
 // 散步進行中畫面（計劃書 §4 walk.vue）
 const { active, isWalking, loading, startWalk, endWalk } = useWalk()
 const { logPoop, poopsForSession } = usePoop()
+const geo = useGeo()
 const router = useRouter()
 
 const sheetOpen = ref(false)
+const endSheetOpen = ref(false)
 const poops = ref<PoopLog[]>([])
 const errorMsg = ref('')
 
-// 進入頁面：若已有進行中的散步，載入其便便記錄
+// 進入頁面：若已有進行中的散步，載入便便記錄並開始 GPS 追蹤
 watch(active, async (s) => {
-  poops.value = s ? await poopsForSession(s.id) : []
+  if (s) {
+    poops.value = await poopsForSession(s.id)
+    if (geo.status.value === 'idle') geo.start()
+  } else {
+    poops.value = []
+  }
 }, { immediate: true })
+
+// GPS 提示文字
+const geoHint = computed(() => {
+  switch (geo.status.value) {
+    case 'denied': return '未授權定位，僅計時'
+    case 'unsupported': return '裝置不支援定位'
+    case 'error': return '定位訊號不佳'
+    default: return null
+  }
+})
+
+// 結束 sheet 用的本次時長（每秒更新）
+const now = ref(Date.now())
+let ticker: ReturnType<typeof setInterval> | undefined
+onMounted(() => { ticker = setInterval(() => { now.value = Date.now() }, 1000) })
+onUnmounted(() => clearInterval(ticker))
+const liveDurationSec = computed(() =>
+  active.value ? diffSec(active.value.started_at, now.value) : 0,
+)
 
 async function onStart() {
   errorMsg.value = ''
   try {
     await startWalk()
+    geo.start()
   } catch (e: any) {
     errorMsg.value = e?.message ?? '無法開始散步'
   }
@@ -35,9 +64,12 @@ async function onPoopSubmit(input: PoopInput) {
   }
 }
 
-async function onEnd() {
+async function onEndConfirm(note: string) {
   try {
-    await endWalk()
+    const { distanceM, route } = geo.snapshot()
+    await endWalk({ distanceM, route, note })
+    geo.reset()
+    endSheetOpen.value = false
     router.push('/')
   } catch (e: any) {
     errorMsg.value = e?.message ?? '無法結束散步'
@@ -52,7 +84,7 @@ async function onEnd() {
       <div class="flex flex-1 flex-col items-center justify-center text-center">
         <div class="text-7xl">🐕‍🦺</div>
         <h1 class="mt-4 text-xl font-bold">準備好出發了嗎？</h1>
-        <p class="mt-1 text-sm text-gray-400">按下開始，計時與便便記錄就緒</p>
+        <p class="mt-1 text-sm text-gray-400">按下開始，計時、距離與便便記錄就緒</p>
         <button class="btn mt-8 w-64 bg-walk text-white text-lg" :disabled="loading" @click="onStart">
           {{ loading ? '準備中…' : '🐾 開始散步' }}
         </button>
@@ -64,9 +96,16 @@ async function onEnd() {
       <div class="flex flex-1 flex-col items-center justify-center">
         <WalkTimer v-if="active" :started-at="active.started_at" />
 
+        <!-- 即時距離 -->
+        <div class="mt-4 flex items-center gap-1.5 text-walk">
+          <span class="text-lg">📍</span>
+          <span class="text-2xl font-bold tabular-nums">{{ formatDistance(geo.distanceM.value) }}</span>
+        </div>
+        <p v-if="geoHint" class="mt-1 text-xs text-gray-400">{{ geoHint }}</p>
+
         <!-- 一鍵記錄便便（戶外大按鈕） -->
         <button
-          class="btn mt-12 w-72 bg-poop text-white text-xl shadow-lg"
+          class="btn mt-10 w-72 bg-poop text-white text-xl shadow-lg"
           style="min-height: 64px"
           @click="sheetOpen = true"
         >
@@ -80,13 +119,25 @@ async function onEnd() {
         </div>
       </div>
 
-      <button class="btn mb-[max(1.5rem,env(safe-area-inset-bottom))] w-full bg-alert text-white" :disabled="loading" @click="onEnd">
-        {{ loading ? '結束中…' : '結束散步' }}
+      <button
+        class="btn mb-[max(1.5rem,env(safe-area-inset-bottom))] w-full bg-alert text-white"
+        :disabled="loading"
+        @click="endSheetOpen = true"
+      >
+        結束散步
       </button>
     </template>
 
     <p v-if="errorMsg" class="pb-4 text-center text-sm text-alert">{{ errorMsg }}</p>
 
     <PoopForm v-model:open="sheetOpen" @submit="onPoopSubmit" />
+    <WalkEndSheet
+      v-model:open="endSheetOpen"
+      :duration-sec="liveDurationSec"
+      :distance-m="geo.distanceM.value"
+      :poop-count="poops.length"
+      :saving="loading"
+      @confirm="onEndConfirm"
+    />
   </main>
 </template>

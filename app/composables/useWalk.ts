@@ -1,5 +1,13 @@
 import type { Database, WalkSession } from '~/types/database'
+import type { RoutePoint } from '~/utils/geo'
 import { diffSec } from '~/utils/time'
+
+/** 結束散步時可一併寫入的資料 */
+export interface EndWalkExtras {
+  distanceM?: number | null
+  route?: RoutePoint[] | null
+  note?: string | null
+}
 
 // 散步狀態管理（計劃書 §5.1）
 // 使用 useState 讓 active session 在頁面間共享、SSR 安全。
@@ -50,16 +58,23 @@ export function useWalk() {
     }
   }
 
-  /** 結束散步：寫入 ended_at 與 duration_sec */
-  async function endWalk() {
+  /** 結束散步：寫入 ended_at、duration_sec，以及 GPS / 備註等附加資料 */
+  async function endWalk(extras: EndWalkExtras = {}) {
     if (!active.value) return null
     loading.value = true
     try {
       const endedAt = new Date().toISOString()
       const duration = diffSec(active.value.started_at, endedAt)
+      const note = extras.note?.trim() || null
       const { data, error } = await supabase
         .from('walk_sessions')
-        .update({ ended_at: endedAt, duration_sec: duration })
+        .update({
+          ended_at: endedAt,
+          duration_sec: duration,
+          distance_m: extras.distanceM ?? null,
+          route_json: extras.route ?? null,
+          note,
+        })
         .eq('id', active.value.id)
         .select('*')
         .single()
