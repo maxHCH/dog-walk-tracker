@@ -2,10 +2,14 @@
 const user = useSupabaseUser()
 const route = useRoute()
 const { loadActive } = useWalk()
+const { fetchDog } = useDog()
 
-// 登入後恢復進行中的散步（App 重開繼續計時，§5.1）
+// 登入後恢復進行中的散步（App 重開繼續計時，§5.1）並載入狗狗資料
 watch(user, (u) => {
-  if (u) loadActive().catch(() => {})
+  if (u) {
+    loadActive().catch(() => {})
+    fetchDog().catch(() => {})
+  }
 }, { immediate: true })
 
 const showNav = computed(() => !!user.value && route.path !== '/login')

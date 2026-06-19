@@ -29,8 +29,14 @@ Nuxt 4 + Vue 3 + Tailwind + Supabase。
    npm install
    ```
 
-2. **建立 Supabase 專案**，於 SQL Editor 執行 [`supabase/migrations/001_init.sql`](supabase/migrations/001_init.sql)
-   建立三張表與 RLS。Auth → Providers 啟用 Email 與 Google。
+2. **建立 Supabase 專案**，於 SQL Editor **依序**執行
+   [`001_init.sql`](supabase/migrations/001_init.sql)（散步/便便/AI 報告三張表）、
+   [`002_dogs.sql`](supabase/migrations/002_dogs.sql)（狗狗基本資料 `dogs` 表）、
+   [`003_dog_age.sql`](supabase/migrations/003_dog_age.sql) 與
+   [`004_dog_birth_year.sql`](supabase/migrations/004_dog_birth_year.sql)（`dogs` 改用出生年 `birth_year`，歲數自動增長），
+   皆含 RLS。Auth → Providers 啟用 Email。
+
+   > ⚠️ 未跑 `002`～`004` 時，App 仍可運作，但「狗狗資料」彈窗儲存會失敗。
 
 3. **設定 `.env`**（複製 `.env.example`）
    ```bash
@@ -64,11 +70,12 @@ Nuxt 4 + Vue 3 + Tailwind + Supabase。
 ```
 app/
 ├── components/   WalkTimer, WalkEndSheet, PoopForm, PoopPill, StatsCard, BottomNav,
-│                 WeekTrendChart, DistChart, RouteThumb, PwaPrompt
-├── composables/  useWalk, usePoop, useToday, useGeo, useHistory, useStats
+│                 WeekTrendChart, DistChart, RouteThumb, PwaPrompt, DogProfileSheet
+├── composables/  useWalk, usePoop, useToday, useGeo, useHistory, useStats, useDog
 ├── pages/        index, walk, history, analysis, login, confirm
 ├── types/        database.ts（Supabase 型別）
-└── utils/        poop.ts（性狀/顏色設定）, time.ts, geo.ts（haversine/路線投影）
+└── utils/        poop.ts（性狀/顏色設定）, time.ts, geo.ts（haversine/路線投影）,
+                  dog.ts（年齡換算/性別）
 public/           icon.svg, pwa-192/512, apple-touch-icon, favicon
-supabase/migrations/001_init.sql
+supabase/migrations/  001_init.sql, 002_dogs.sql
 ```

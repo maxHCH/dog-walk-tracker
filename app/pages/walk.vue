@@ -7,6 +7,7 @@ import { formatDistance } from '~/utils/geo'
 // 散步進行中畫面（計劃書 §4 walk.vue）
 const { active, isWalking, loading, startWalk, endWalk } = useWalk()
 const { logPoop, poopsForSession } = usePoop()
+const { dog } = useDog()
 const geo = useGeo()
 const router = useRouter()
 
@@ -47,7 +48,7 @@ const liveDurationSec = computed(() =>
 async function onStart() {
   errorMsg.value = ''
   try {
-    await startWalk()
+    await startWalk(dog.value?.name || undefined)
     geo.start()
   } catch (e: any) {
     errorMsg.value = e?.message ?? '無法開始散步'

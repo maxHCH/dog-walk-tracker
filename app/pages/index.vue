@@ -1,12 +1,16 @@
 <script setup lang="ts">
+import type { DogInput } from '~/composables/useDog'
 import { formatDuration } from '~/utils/time'
+import { ageFromBirthYear, genderLabel } from '~/utils/dog'
 
 // 首頁：今日摘要（計劃書 §4 index.vue）
 // 一眼看懂今日狀況，不需滾動。
 const { fetchToday } = useToday()
 const { isWalking } = useWalk()
+const { dog, loaded: dogLoaded, fetchDog, saveDog } = useDog()
 
 const { data: summary, refresh, pending } = await useAsyncData('today', () => fetchToday())
+await useAsyncData('dog', () => fetchDog())
 
 // 從散步頁返回時刷新數字
 onActivated(() => refresh())
@@ -19,17 +23,61 @@ const greeting = computed(() => {
   return '晚安'
 })
 
+// 狗狗資料設定彈窗
+const profileOpen = ref(false)
+const profileSaving = ref(false)
+const profileError = ref('')
+
+// 年齡 · 性別（生日/性別有填才顯示）
+const dogMeta = computed(() => {
+  if (!dog.value) return null
+  return [ageFromBirthYear(dog.value.birth_year), genderLabel(dog.value.gender)].filter(Boolean).join(' · ') || null
+})
+
+async function onProfileSubmit(input: DogInput) {
+  profileError.value = ''
+  profileSaving.value = true
+  try {
+    await saveDog(input)
+    profileOpen.value = false
+  } catch (e: any) {
+    profileError.value = e?.message ?? '儲存失敗，請確認資料表已建立'
+  } finally {
+    profileSaving.value = false
+  }
+}
+
 const today = new Intl.DateTimeFormat('zh-TW', { month: 'long', day: 'numeric', weekday: 'long' }).format(new Date())
 </script>
 
 <template>
   <main class="px-5 pt-[max(1.5rem,env(safe-area-inset-top))]">
     <header class="flex items-center justify-between">
-      <div>
-        <h1 class="text-2xl font-bold">{{ greeting }} 👋</h1>
-        <p class="text-sm text-gray-400">{{ today }}</p>
+      <div class="min-w-0">
+        <h1 class="truncate text-2xl font-bold">
+          {{ greeting }}<template v-if="dog">，{{ dog.name }}</template> 👋
+        </h1>
+        <p class="text-sm text-gray-400">
+          {{ today }}<template v-if="dogMeta"> · {{ dogMeta }}</template>
+        </p>
       </div>
+      <button
+        class="flex shrink-0 items-center gap-1 rounded-full bg-white px-3 py-1.5 text-sm shadow-sm active:scale-95"
+        @click="profileOpen = true"
+      >
+        <span>🐶</span>
+        <span class="text-gray-500">{{ dog ? '編輯' : '設定' }}</span>
+      </button>
     </header>
+
+    <!-- 尚未建立狗狗資料時的引導 -->
+    <button
+      v-if="dogLoaded && !dog"
+      class="mt-4 w-full rounded-2xl border-2 border-dashed border-walk/40 bg-walk-bg/60 px-4 py-3 text-left text-sm text-walk active:scale-[0.99]"
+      @click="profileOpen = true"
+    >
+      🐶 幫狗狗建立基本資料，首頁就會跟牠打招呼 ›
+    </button>
 
     <!-- 散步中提示 -->
     <NuxtLink
@@ -86,5 +134,13 @@ const today = new Intl.DateTimeFormat('zh-TW', { month: 'long', day: 'numeric', 
     >
       🐾 開始散步
     </NuxtLink>
+
+    <DogProfileSheet
+      v-model:open="profileOpen"
+      :dog="dog"
+      :saving="profileSaving"
+      :error="profileError"
+      @submit="onProfileSubmit"
+    />
   </main>
 </template>

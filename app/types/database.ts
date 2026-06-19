@@ -6,10 +6,41 @@ export type Json = string | number | boolean | null | { [key: string]: Json | un
 
 export type Consistency = 'normal' | 'soft' | 'loose' | 'hard'
 export type PoopColor = 'brown' | 'yellow' | 'black' | 'red'
+export type DogGender = 'male' | 'female'
 
 export interface Database {
   public: {
     Tables: {
+      dogs: {
+        Row: {
+          id: string
+          user_id: string
+          name: string
+          gender: DogGender | null
+          birth_year: number | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          name: string
+          gender?: DogGender | null
+          birth_year?: number | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          name?: string
+          gender?: DogGender | null
+          birth_year?: number | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       walk_sessions: {
         Row: {
           id: string
@@ -124,6 +155,7 @@ export interface Database {
 }
 
 // 方便應用層使用的 Row 別名
+export type Dog = Database['public']['Tables']['dogs']['Row']
 export type WalkSession = Database['public']['Tables']['walk_sessions']['Row']
 export type PoopLog = Database['public']['Tables']['poop_logs']['Row']
 export type AiReport = Database['public']['Tables']['ai_reports']['Row']
