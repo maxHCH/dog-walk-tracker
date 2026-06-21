@@ -41,48 +41,49 @@ async function save() {
       <div v-if="open" class="fixed inset-0 z-50 flex items-end" @click.self="open = false">
         <div class="absolute inset-0 bg-black/40" @click="open = false" />
         <div class="relative w-full rounded-t-3xl bg-white p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-2xl">
-          <div class="mx-auto mb-4 h-1.5 w-10 rounded-full bg-gray-300" />
-          <h2 class="text-lg font-bold text-poop">記錄便便 💩</h2>
+          <div class="mx-auto mb-4 h-1.5 w-10 rounded-full bg-ink/15" />
+          <h2 class="flex items-center gap-1.5 text-lg font-bold text-poop">
+            <Icon name="app:poop" /> 記錄便便
+          </h2>
 
           <!-- 性狀 -->
-          <p class="mt-4 mb-2 text-sm font-medium text-gray-500">性狀</p>
+          <p class="mt-4 mb-2 text-sm font-medium text-muted">性狀</p>
           <div class="grid grid-cols-4 gap-2">
             <button
               v-for="opt in CONSISTENCY_OPTIONS"
               :key="opt.value"
               type="button"
-              class="flex flex-col items-center gap-1 rounded-2xl border-2 py-3 text-sm transition active:scale-95"
+              class="rounded-2xl border-2 py-3.5 text-sm transition active:scale-95"
               :class="consistency === opt.value
                 ? 'border-poop bg-poop-bg text-poop font-semibold'
-                : 'border-gray-200 text-gray-600'"
+                : 'border-ink/10 text-ink/70'"
               @click="consistency = opt.value"
             >
-              <span class="text-xl">{{ opt.emoji }}</span>
-              <span>{{ opt.label }}</span>
+              {{ opt.label }}
             </button>
           </div>
 
           <!-- 顏色 -->
-          <p class="mt-4 mb-2 text-sm font-medium text-gray-500">顏色</p>
+          <p class="mt-4 mb-2 text-sm font-medium text-muted">顏色</p>
           <div class="grid grid-cols-4 gap-2">
             <button
               v-for="opt in COLOR_OPTIONS"
               :key="opt.value"
               type="button"
-              class="flex flex-col items-center gap-1 rounded-2xl border-2 py-3 text-sm transition active:scale-95"
+              class="flex flex-col items-center gap-1.5 rounded-2xl border-2 py-3 text-sm transition active:scale-95"
               :class="color === opt.value
                 ? 'border-poop bg-poop-bg text-poop font-semibold'
-                : 'border-gray-200 text-gray-600'"
+                : 'border-ink/10 text-ink/70'"
               @click="color = opt.value"
             >
-              <span class="text-xl">{{ opt.emoji }}</span>
+              <span class="h-5 w-5 rounded-full ring-1 ring-black/10" :style="{ backgroundColor: opt.swatch }" />
               <span>{{ opt.label }}</span>
             </button>
           </div>
 
           <!-- 帶血/黑色就醫警示（計劃書 §5.4） -->
-          <p v-if="critical" class="mt-3 rounded-xl bg-alert-bg px-3 py-2 text-sm text-alert">
-            ⚠️ 黑色或帶血便建議盡快就醫檢查。
+          <p v-if="critical" class="mt-3 flex items-center gap-1.5 rounded-xl bg-alert-bg px-3 py-2 text-sm text-alert">
+            <Icon name="lucide:triangle-alert" class="shrink-0" /> 黑色或帶血便建議盡快就醫檢查。
           </p>
 
           <!-- 備註 -->
@@ -90,11 +91,11 @@ async function save() {
             v-model="note"
             type="text"
             placeholder="備註（可選）"
-            class="mt-4 w-full rounded-xl border border-gray-200 px-3 py-3 text-base focus:border-poop focus:outline-none"
+            class="mt-4 w-full rounded-xl border border-ink/10 px-3 py-3 text-base focus:border-poop focus:outline-none"
           >
 
           <div class="mt-5 flex gap-3">
-            <button type="button" class="btn flex-1 bg-gray-100 text-gray-600" @click="open = false">
+            <button type="button" class="btn flex-1 bg-ink/5 text-ink" @click="open = false">
               取消
             </button>
             <button type="button" class="btn flex-1 bg-poop text-white" :disabled="saving" @click="save">

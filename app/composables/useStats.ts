@@ -17,8 +17,8 @@ export interface DayBar {
 export interface DistItem<T extends string> {
   value: T
   label: string
-  emoji: string
   abnormal: boolean
+  swatch?: string
   count: number
 }
 

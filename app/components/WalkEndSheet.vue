@@ -27,8 +27,10 @@ watch(open, (v) => {
       <div v-if="open" class="fixed inset-0 z-50 flex items-end" @click.self="open = false">
         <div class="absolute inset-0 bg-black/40" @click="open = false" />
         <div class="relative w-full rounded-t-3xl bg-white p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-2xl">
-          <div class="mx-auto mb-4 h-1.5 w-10 rounded-full bg-gray-300" />
-          <h2 class="text-lg font-bold text-walk">結束這次散步 🐾</h2>
+          <div class="mx-auto mb-4 h-1.5 w-10 rounded-full bg-ink/15" />
+          <h2 class="flex items-center gap-1.5 text-lg font-bold text-walk">
+            <Icon name="lucide:footprints" /> 結束這次散步
+          </h2>
 
           <div class="mt-4 grid grid-cols-3 gap-2 text-center">
             <div class="rounded-2xl bg-walk-bg py-3">
@@ -49,11 +51,11 @@ watch(open, (v) => {
             v-model="note"
             type="text"
             placeholder="這次散步的備註（可選）"
-            class="mt-4 w-full rounded-xl border border-gray-200 px-3 py-3 text-base focus:border-walk focus:outline-none"
+            class="mt-4 w-full rounded-xl border border-ink/10 px-3 py-3 text-base focus:border-walk focus:outline-none"
           >
 
           <div class="mt-5 flex gap-3">
-            <button type="button" class="btn flex-1 bg-gray-100 text-gray-600" @click="open = false">
+            <button type="button" class="btn flex-1 bg-ink/5 text-ink" @click="open = false">
               繼續散步
             </button>
             <button

@@ -8,7 +8,11 @@
     -webkit-tap-highlight-color: transparent;
   }
   body {
-    @apply bg-gray-50 text-gray-900 antialiased;
+    @apply text-ink antialiased;
+    /* 暖奶油漸層底（編輯風） */
+    background: linear-gradient(180deg, #f6f1e6 0%, #f1e9d9 100%);
+    background-attachment: fixed;
+    min-height: 100vh;
   }
 }
 
@@ -17,5 +21,15 @@
   .btn {
     @apply inline-flex items-center justify-center gap-2 rounded-2xl px-5 py-3.5 text-base font-semibold transition active:scale-95 disabled:opacity-50;
     min-height: 48px;
+  }
+
+  /* 小標籤：小寫字距拉開（Morning OS 風） */
+  .eyebrow {
+    @apply text-[11px] font-semibold uppercase tracking-[0.16em];
+  }
+
+  /* 內容卡：白底、柔和陰影、細描邊 */
+  .card {
+    @apply rounded-3xl bg-surface shadow-card ring-1 ring-ink/5;
   }
 }

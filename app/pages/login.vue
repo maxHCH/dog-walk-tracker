@@ -72,10 +72,11 @@ function translateError(msg: string): string {
 
 <template>
   <main class="flex min-h-screen flex-col items-center justify-center px-6">
-    <div class="mb-8 text-center">
-      <div class="text-6xl">🐕</div>
-      <h1 class="mt-3 text-2xl font-bold text-walk">狗狗散步記錄</h1>
-      <p class="mt-1 text-sm text-gray-500">記錄散步與便便，AI 守護毛孩健康</p>
+    <div class="mb-9 text-center">
+      <Icon name="lucide:dog" class="text-6xl text-walk" />
+      <p class="eyebrow mt-4 text-clay">Dog Walk Tracker</p>
+      <h1 class="mt-2 font-serif text-3xl font-semibold text-ink">狗狗散步記錄</h1>
+      <p class="mt-2 text-sm text-muted">記錄散步與便便，AI 守護毛孩健康</p>
     </div>
 
     <form class="w-full max-w-sm space-y-3" @submit.prevent="submit">
@@ -85,14 +86,14 @@ function translateError(msg: string): string {
         inputmode="email"
         autocomplete="email"
         placeholder="Email"
-        class="w-full rounded-xl border border-gray-200 px-4 py-3.5 text-base focus:border-walk focus:outline-none"
+        class="w-full rounded-xl border border-ink/10 bg-surface px-4 py-3.5 text-base focus:border-walk focus:outline-none"
       >
       <input
         v-model="password"
         type="password"
         :autocomplete="mode === 'signin' ? 'current-password' : 'new-password'"
         placeholder="密碼（至少 6 字元）"
-        class="w-full rounded-xl border border-gray-200 px-4 py-3.5 text-base focus:border-walk focus:outline-none"
+        class="w-full rounded-xl border border-ink/10 bg-surface px-4 py-3.5 text-base focus:border-walk focus:outline-none"
       >
 
       <button
@@ -111,7 +112,7 @@ function translateError(msg: string): string {
 
     <button
       type="button"
-      class="mt-6 text-sm text-gray-500 underline underline-offset-4"
+      class="mt-6 text-sm text-muted underline underline-offset-4"
       @click="toggleMode"
     >
       {{ mode === 'signin' ? '還沒有帳號？前往註冊' : '已有帳號？前往登入' }}

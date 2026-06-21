@@ -83,11 +83,12 @@ async function onEndConfirm(note: string) {
     <!-- 尚未開始 -->
     <template v-if="!isWalking">
       <div class="flex flex-1 flex-col items-center justify-center text-center">
-        <div class="text-7xl">🐕‍🦺</div>
-        <h1 class="mt-4 text-xl font-bold">準備好出發了嗎？</h1>
-        <p class="mt-1 text-sm text-gray-400">按下開始，計時、距離與便便記錄就緒</p>
+        <Icon name="lucide:dog" class="text-7xl text-walk" />
+        <h1 class="mt-5 font-serif text-2xl font-semibold text-ink">準備好出發了嗎？</h1>
+        <p class="mt-1.5 text-sm text-muted">按下開始，計時、距離與便便記錄就緒</p>
         <button class="btn mt-8 w-64 bg-walk text-white text-lg" :disabled="loading" @click="onStart">
-          {{ loading ? '準備中…' : '🐾 開始散步' }}
+          <template v-if="loading">準備中…</template>
+          <template v-else><Icon name="lucide:footprints" class="text-xl" /> 開始散步</template>
         </button>
       </div>
     </template>
@@ -99,10 +100,10 @@ async function onEndConfirm(note: string) {
 
         <!-- 即時距離 -->
         <div class="mt-4 flex items-center gap-1.5 text-walk">
-          <span class="text-lg">📍</span>
+          <Icon name="lucide:map-pin" class="text-lg" />
           <span class="text-2xl font-bold tabular-nums">{{ formatDistance(geo.distanceM.value) }}</span>
         </div>
-        <p v-if="geoHint" class="mt-1 text-xs text-gray-400">{{ geoHint }}</p>
+        <p v-if="geoHint" class="mt-1 text-xs text-muted">{{ geoHint }}</p>
 
         <!-- 一鍵記錄便便（戶外大按鈕） -->
         <button
@@ -110,9 +111,9 @@ async function onEndConfirm(note: string) {
           style="min-height: 64px"
           @click="sheetOpen = true"
         >
-          💩 記錄便便
+          <Icon name="app:poop" class="text-2xl" /> 記錄便便
         </button>
-        <p class="mt-3 text-sm text-gray-400">本次已記錄 {{ poops.length }} 次</p>
+        <p class="mt-3 text-sm text-muted">本次已記錄 {{ poops.length }} 次</p>
 
         <!-- 本次便便縮影 -->
         <div v-if="poops.length" class="mt-4 flex flex-wrap justify-center gap-2">

@@ -56,21 +56,23 @@ function save() {
       <div v-if="open" class="fixed inset-0 z-50 flex items-end" @click.self="open = false">
         <div class="absolute inset-0 bg-black/40" @click="open = false" />
         <div class="relative w-full rounded-t-3xl bg-white p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-2xl">
-          <div class="mx-auto mb-4 h-1.5 w-10 rounded-full bg-gray-300" />
-          <h2 class="text-lg font-bold text-walk">🐶 狗狗資料</h2>
+          <div class="mx-auto mb-4 h-1.5 w-10 rounded-full bg-ink/15" />
+          <h2 class="flex items-center gap-1.5 text-lg font-bold text-walk">
+            <Icon name="lucide:dog" /> 狗狗資料
+          </h2>
 
           <!-- 名字 -->
-          <p class="mt-4 mb-2 text-sm font-medium text-gray-500">名字</p>
+          <p class="mt-4 mb-2 text-sm font-medium text-muted">名字</p>
           <input
             v-model="name"
             type="text"
             placeholder="例如：小白"
             maxlength="20"
-            class="w-full rounded-xl border border-gray-200 px-3 py-3 text-base focus:border-walk focus:outline-none"
+            class="w-full rounded-xl border border-ink/10 px-3 py-3 text-base focus:border-walk focus:outline-none"
           >
 
           <!-- 性別 -->
-          <p class="mt-4 mb-2 text-sm font-medium text-gray-500">性別（可選）</p>
+          <p class="mt-4 mb-2 text-sm font-medium text-muted">性別（可選）</p>
           <div class="grid grid-cols-2 gap-2">
             <button
               v-for="opt in GENDER_OPTIONS"
@@ -79,16 +81,16 @@ function save() {
               class="flex items-center justify-center gap-1.5 rounded-2xl border-2 py-3 text-sm transition active:scale-95"
               :class="gender === opt.value
                 ? 'border-walk bg-walk-bg text-walk font-semibold'
-                : 'border-gray-200 text-gray-600'"
+                : 'border-ink/10 text-ink'"
               @click="gender = gender === opt.value ? null : opt.value"
             >
-              <span class="text-lg">{{ opt.emoji }}</span>
+              <Icon :name="opt.icon" class="text-lg" />
               <span>{{ opt.label }}</span>
             </button>
           </div>
 
           <!-- 出生年 -->
-          <p class="mt-4 mb-2 text-sm font-medium text-gray-500">出生年（西元，可選）</p>
+          <p class="mt-4 mb-2 text-sm font-medium text-muted">出生年（西元，可選）</p>
           <div class="flex items-center gap-2">
             <input
               v-model="birthYear"
@@ -97,11 +99,11 @@ function save() {
               :min="yearRange.min"
               :max="yearRange.max"
               placeholder="例如：2021"
-              class="w-full rounded-xl border border-gray-200 px-3 py-3 text-base focus:border-walk focus:outline-none"
+              class="w-full rounded-xl border border-ink/10 px-3 py-3 text-base focus:border-walk focus:outline-none"
             >
-            <span class="shrink-0 text-sm text-gray-500">年</span>
+            <span class="shrink-0 text-sm text-muted">年</span>
           </div>
-          <p class="mt-1.5 text-xs text-gray-400">
+          <p class="mt-1.5 text-xs text-muted">
             只需填年份，歲數會自動增長<template v-if="agePreview"> · 目前約 {{ agePreview }}</template>
           </p>
 
@@ -110,7 +112,7 @@ function save() {
           </p>
 
           <div class="mt-5 flex gap-3">
-            <button type="button" class="btn flex-1 bg-gray-100 text-gray-600" @click="open = false">
+            <button type="button" class="btn flex-1 bg-ink/5 text-ink" @click="open = false">
               取消
             </button>
             <button

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+  <!-- 單色便便（堆疊漩渦剪影），fill=currentColor 以繼承文字色 -->
+  <path d="M12 2.6c1.5 2.7 3.4 5.1 3.4 7.2 0 2.4-6.8 2.4-6.8 0 0-2.1 1.9-4.5 3.4-7.2Z" />
+  <ellipse cx="12" cy="13.6" rx="6.6" ry="3.6" />
+  <ellipse cx="12" cy="18.6" rx="8.8" ry="3.7" />
+</svg>

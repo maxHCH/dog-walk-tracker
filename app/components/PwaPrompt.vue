@@ -17,7 +17,7 @@ const visible = computed(() => showInstall.value || showUpdate.value)
       class="fixed inset-x-3 bottom-[max(5.5rem,calc(env(safe-area-inset-bottom)+5rem))] z-50 mx-auto max-w-md rounded-2xl bg-white px-4 py-3 shadow-2xl ring-1 ring-black/5"
     >
       <div class="flex items-center gap-3">
-        <span class="text-2xl">🐾</span>
+        <Icon name="lucide:dog" class="text-2xl text-walk" />
         <div class="min-w-0 flex-1">
           <template v-if="showUpdate">
             <p class="text-sm font-semibold">有新版本</p>

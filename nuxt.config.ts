@@ -5,9 +5,17 @@ export default defineNuxtConfig({
 
   devServer: { port: 3200 },
 
-  modules: ['@nuxtjs/supabase', '@nuxtjs/tailwindcss', '@vite-pwa/nuxt'],
+  modules: ['@nuxtjs/supabase', '@nuxtjs/tailwindcss', '@vite-pwa/nuxt', '@nuxt/icon'],
 
   css: ['~/assets/css/main.css'],
+
+  // 圖示：Lucide（本地 @iconify-json/lucide，離線可用）+ 自訂單色便便
+  icon: {
+    serverBundle: 'local',
+    customCollections: [
+      { prefix: 'app', dir: './app/assets/icons' },
+    ],
+  },
 
   // PWA：可安裝（manifest + icon）＋ 離線（precache app shell，導覽走 NetworkFirst）
   pwa: {
@@ -83,6 +91,13 @@ export default defineNuxtConfig({
       link: [
         { rel: 'icon', type: 'image/png', href: '/favicon.png' },
         { rel: 'apple-touch-icon', href: '/apple-touch-icon.png' },
+        // 編輯風襯線字體（支援繁中），CJK 由 Google Fonts 依字元動態子集化
+        { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
+        { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' },
+        {
+          rel: 'stylesheet',
+          href: 'https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;500;600;700&display=swap',
+        },
       ],
     },
   },

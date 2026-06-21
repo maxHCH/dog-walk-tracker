@@ -18,7 +18,7 @@ const abnormal = computed(() => c.value.abnormal || col.value.abnormal)
     class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium"
     :class="abnormal ? 'bg-alert-bg text-alert' : 'bg-poop-bg text-poop'"
   >
-    <span>{{ c.emoji }}</span>
+    <span class="h-2.5 w-2.5 rounded-full ring-1 ring-black/10" :style="{ backgroundColor: col.swatch }" />
     <span>{{ c.label }}</span>
     <span class="opacity-60">·</span>
     <span>{{ col.label }}</span>

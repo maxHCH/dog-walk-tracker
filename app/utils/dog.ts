@@ -2,9 +2,9 @@ import type { DogGender } from '~/types/database'
 
 // 狗狗資料的顯示工具：年齡換算與性別標籤。
 
-export const GENDER_OPTIONS: { value: DogGender; label: string; emoji: string }[] = [
-  { value: 'male', label: '公', emoji: '♂️' },
-  { value: 'female', label: '母', emoji: '♀️' },
+export const GENDER_OPTIONS: { value: DogGender; label: string; icon: string }[] = [
+  { value: 'male', label: '公', icon: 'lucide:mars' },
+  { value: 'female', label: '母', icon: 'lucide:venus' },
 ]
 
 export function genderLabel(g: DogGender | null | undefined): string | null {

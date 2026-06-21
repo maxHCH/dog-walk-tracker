@@ -16,7 +16,14 @@ function pct(count: number): number {
 <template>
   <div v-if="total" class="space-y-2">
     <div v-for="it in props.items" :key="it.value" class="flex items-center gap-2">
-      <span class="w-12 shrink-0 text-xs text-gray-500">{{ it.emoji }} {{ it.label }}</span>
+      <span class="flex w-14 shrink-0 items-center gap-1.5 text-xs text-muted">
+        <span
+          v-if="it.swatch"
+          class="h-2.5 w-2.5 shrink-0 rounded-full ring-1 ring-black/10"
+          :style="{ backgroundColor: it.swatch }"
+        />
+        {{ it.label }}
+      </span>
       <div class="h-3 flex-1 overflow-hidden rounded-full bg-gray-100">
         <div
           class="h-full rounded-full transition-all"

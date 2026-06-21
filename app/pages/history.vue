@@ -34,14 +34,15 @@ const hasAny = computed(() => (groups.value?.length ?? 0) > 0)
 </script>
 
 <template>
-  <main class="px-5 pt-[max(1.5rem,env(safe-area-inset-top))]">
-    <h1 class="text-2xl font-bold">歷史記錄</h1>
+  <main class="px-6 pb-4 pt-[max(2.25rem,calc(env(safe-area-inset-top)+1rem))]">
+    <p class="eyebrow text-clay">History</p>
+    <h1 class="mt-2 font-serif text-3xl font-semibold text-ink">歷史記錄</h1>
 
     <!-- 近 7 天統計 -->
-    <section v-if="stats" class="mt-4 rounded-2xl bg-white p-4 shadow-sm">
+    <section v-if="stats" class="card mt-5 p-5">
       <div class="flex items-baseline justify-between">
-        <h2 class="text-sm font-semibold text-gray-500">近 7 天趨勢</h2>
-        <span class="text-xs text-gray-400">總時長 {{ formatDuration(stats.totalDurationSec) }}</span>
+        <p class="eyebrow text-muted">近 7 天趨勢</p>
+        <span class="text-xs text-muted">總時長 {{ formatDuration(stats.totalDurationSec) }}</span>
       </div>
       <WeekTrendChart class="mt-3" :days="stats.days" />
 
@@ -54,23 +55,23 @@ const hasAny = computed(() => (groups.value?.length ?? 0) > 0)
           <div class="text-lg font-bold tabular-nums text-poop">{{ stats.totalPoops }}</div>
           <div class="text-[11px] text-poop/70">便便次數</div>
         </div>
-        <div class="rounded-xl py-2" :class="stats.abnormalPoops ? 'bg-alert-bg' : 'bg-gray-100'">
-          <div class="text-lg font-bold tabular-nums" :class="stats.abnormalPoops ? 'text-alert' : 'text-gray-400'">
+        <div class="rounded-xl py-2" :class="stats.abnormalPoops ? 'bg-alert-bg' : 'bg-ink/5'">
+          <div class="text-lg font-bold tabular-nums" :class="stats.abnormalPoops ? 'text-alert' : 'text-muted'">
             {{ stats.abnormalPoops }}
           </div>
-          <div class="text-[11px]" :class="stats.abnormalPoops ? 'text-alert/70' : 'text-gray-400'">異常便便</div>
+          <div class="text-[11px]" :class="stats.abnormalPoops ? 'text-alert/70' : 'text-muted'">異常便便</div>
         </div>
       </div>
     </section>
 
     <!-- 便便分布 -->
     <section v-if="stats && stats.totalPoops" class="mt-3 grid gap-3 sm:grid-cols-2">
-      <div class="rounded-2xl bg-white p-4 shadow-sm">
-        <h2 class="mb-3 text-sm font-semibold text-gray-500">性狀分布</h2>
+      <div class="card p-4">
+        <h2 class="mb-3 text-sm font-semibold text-muted">性狀分布</h2>
         <DistChart :items="stats.consistency" />
       </div>
-      <div class="rounded-2xl bg-white p-4 shadow-sm">
-        <h2 class="mb-3 text-sm font-semibold text-gray-500">顏色分布</h2>
+      <div class="card p-4">
+        <h2 class="mb-3 text-sm font-semibold text-muted">顏色分布</h2>
         <DistChart :items="stats.color" />
       </div>
     </section>
@@ -78,11 +79,14 @@ const hasAny = computed(() => (groups.value?.length ?? 0) > 0)
     <!-- 分組列表 -->
     <section class="mt-6 space-y-6 pb-4">
       <div v-for="g in groups" :key="g.date">
-        <div class="mb-2 flex items-center justify-between">
-          <h2 class="text-sm font-semibold text-gray-600">{{ g.label }}</h2>
-          <span class="text-xs text-gray-400">
-            🐕 {{ g.walkCount }}　💩 {{ g.poopCount }}
-            <span v-if="g.abnormalCount" class="text-alert">⚠️ {{ g.abnormalCount }}</span>
+        <div class="mb-2.5 flex items-center justify-between">
+          <h2 class="font-serif text-lg font-semibold text-ink">{{ g.label }}</h2>
+          <span class="flex items-center gap-2.5 text-xs text-muted">
+            <span class="inline-flex items-center gap-1"><Icon name="lucide:footprints" /> {{ g.walkCount }}</span>
+            <span class="inline-flex items-center gap-1"><Icon name="app:poop" /> {{ g.poopCount }}</span>
+            <span v-if="g.abnormalCount" class="inline-flex items-center gap-1 text-alert">
+              <Icon name="lucide:triangle-alert" /> {{ g.abnormalCount }}
+            </span>
           </span>
         </div>
 
@@ -91,7 +95,7 @@ const hasAny = computed(() => (groups.value?.length ?? 0) > 0)
           <li
             v-for="w in g.walks"
             :key="w.id"
-            class="rounded-2xl bg-white p-3.5 shadow-sm"
+            class="card p-3.5"
           >
             <div class="flex gap-3">
               <RouteThumb
@@ -103,33 +107,36 @@ const hasAny = computed(() => (groups.value?.length ?? 0) > 0)
               />
               <div class="min-w-0 flex-1">
                 <div class="flex items-center justify-between">
-                  <span class="font-semibold text-walk">
-                    🐾 {{ timeLabel(w.started_at) }}<span v-if="w.ended_at"> – {{ timeLabel(w.ended_at) }}</span>
+                  <span class="flex items-center gap-1.5 font-semibold text-walk">
+                    <Icon name="lucide:footprints" />
+                    {{ timeLabel(w.started_at) }}<span v-if="w.ended_at"> – {{ timeLabel(w.ended_at) }}</span>
                   </span>
                   <button
-                    class="-m-1 p-1 text-gray-300 active:scale-90"
+                    class="-m-1 p-1 text-muted/50 active:scale-90"
                     aria-label="刪除散步"
                     @click="confirmingId = confirmingId === w.id ? null : w.id"
                   >
-                    🗑️
+                    <Icon name="lucide:trash-2" class="text-base" />
                   </button>
                 </div>
-                <div class="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-gray-500">
-                  <span>⏱️ {{ formatDuration(w.duration_sec ?? 0) }}</span>
-                  <span v-if="w.distance_m">📍 {{ formatDistance(w.distance_m) }}</span>
-                  <span v-if="w.poops.length">💩 {{ w.poops.length }} 次</span>
+                <div class="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted">
+                  <span class="inline-flex items-center gap-1"><Icon name="lucide:timer" /> {{ formatDuration(w.duration_sec ?? 0) }}</span>
+                  <span v-if="w.distance_m" class="inline-flex items-center gap-1"><Icon name="lucide:map-pin" /> {{ formatDistance(w.distance_m) }}</span>
+                  <span v-if="w.poops.length" class="inline-flex items-center gap-1"><Icon name="app:poop" /> {{ w.poops.length }} 次</span>
                 </div>
                 <div v-if="w.poops.length" class="mt-2 flex flex-wrap gap-1.5">
                   <PoopPill v-for="p in w.poops" :key="p.id" :consistency="p.consistency" :color="p.color" />
                 </div>
-                <p v-if="w.note" class="mt-2 text-xs text-gray-500">📝 {{ w.note }}</p>
+                <p v-if="w.note" class="mt-2 flex items-center gap-1.5 text-xs text-muted">
+                  <Icon name="lucide:sticky-note" class="shrink-0" /> {{ w.note }}
+                </p>
               </div>
             </div>
 
             <!-- 刪除確認 -->
-            <div v-if="confirmingId === w.id" class="mt-3 flex items-center gap-2 border-t border-gray-100 pt-3">
-              <span class="flex-1 text-xs text-gray-500">刪除這次散步與其便便記錄？</span>
-              <button class="rounded-lg bg-gray-100 px-3 py-1.5 text-xs text-gray-600" @click="confirmingId = null">
+            <div v-if="confirmingId === w.id" class="mt-3 flex items-center gap-2 border-t border-ink/5 pt-3">
+              <span class="flex-1 text-xs text-muted">刪除這次散步與其便便記錄？</span>
+              <button class="rounded-lg bg-ink/5 px-3 py-1.5 text-xs text-ink" @click="confirmingId = null">
                 取消
               </button>
               <button
@@ -146,18 +153,18 @@ const hasAny = computed(() => (groups.value?.length ?? 0) > 0)
           <li
             v-for="p in g.strayPoops"
             :key="p.id"
-            class="flex items-center justify-between rounded-2xl bg-white px-3.5 py-2.5 shadow-sm"
+            class="card flex items-center justify-between px-3.5 py-2.5"
           >
             <PoopPill :consistency="p.consistency" :color="p.color" />
-            <span class="text-xs text-gray-400">{{ timeLabel(p.logged_at) }}</span>
+            <span class="text-xs text-muted">{{ timeLabel(p.logged_at) }}</span>
           </li>
         </ul>
       </div>
     </section>
 
     <!-- 空狀態 -->
-    <div v-if="!pending && !hasAny" class="mt-16 text-center text-gray-400">
-      <div class="text-5xl">📅</div>
+    <div v-if="!pending && !hasAny" class="mt-16 text-center text-muted">
+      <Icon name="lucide:calendar-days" class="text-5xl opacity-60" />
       <p class="mt-3 text-sm">還沒有歷史記錄<br>完成第一次散步後就會出現在這裡</p>
     </div>
   </main>
