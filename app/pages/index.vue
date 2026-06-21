@@ -8,6 +8,7 @@ import { ageFromBirthYear, genderLabel } from '~/utils/dog'
 const user = useSupabaseUser()
 const { fetchToday } = useToday()
 const { isWalking } = useWalk()
+const { deletePoop } = usePoop()
 const { dog, loaded: dogLoaded, fetchDog, saveDog } = useDog()
 
 // watch: [user] — 登入狀態還原後自動重抓，避免首次進首頁時 user 尚未就緒
@@ -41,6 +42,20 @@ const greeting = computed(() => {
 const profileOpen = ref(false)
 const profileSaving = ref(false)
 const profileError = ref('')
+
+// 今日便便：單筆刪除（多記了可移除）
+const confirmingPoopId = ref<string | null>(null)
+const deletingPoopId = ref<string | null>(null)
+async function onDeletePoop(id: string) {
+  deletingPoopId.value = id
+  try {
+    await deletePoop(id)
+    await refresh()
+  } finally {
+    deletingPoopId.value = null
+    confirmingPoopId.value = null
+  }
+}
 
 // 年齡 · 性別（生日/性別有填才顯示）
 const dogMeta = computed(() => {
@@ -131,12 +146,38 @@ const today = new Intl.DateTimeFormat('zh-TW', { month: 'long', day: 'numeric', 
         <li
           v-for="p in summary.poops"
           :key="p.id"
-          class="card flex items-center justify-between px-4 py-3"
+          class="card px-4 py-3"
         >
-          <PoopPill :consistency="p.consistency" :color="p.color" />
-          <span class="text-xs text-muted">
-            {{ new Date(p.logged_at).toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' }) }}
-          </span>
+          <div class="flex items-center justify-between">
+            <PoopPill :consistency="p.consistency" :color="p.color" />
+            <div class="flex items-center gap-2.5">
+              <span class="text-xs text-muted">
+                {{ new Date(p.logged_at).toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' }) }}
+              </span>
+              <button
+                class="-m-1 p-1 text-muted/50 active:scale-90"
+                aria-label="刪除便便記錄"
+                @click="confirmingPoopId = confirmingPoopId === p.id ? null : p.id"
+              >
+                <Icon name="lucide:trash-2" class="text-base" />
+              </button>
+            </div>
+          </div>
+
+          <!-- 刪除確認 -->
+          <div v-if="confirmingPoopId === p.id" class="mt-2.5 flex items-center gap-2 border-t border-ink/5 pt-2.5">
+            <span class="flex-1 text-xs text-muted">刪除這筆便便記錄？</span>
+            <button class="rounded-lg bg-ink/5 px-3 py-1.5 text-xs text-ink" @click="confirmingPoopId = null">
+              取消
+            </button>
+            <button
+              class="rounded-lg bg-alert px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
+              :disabled="deletingPoopId === p.id"
+              @click="onDeletePoop(p.id)"
+            >
+              {{ deletingPoopId === p.id ? '刪除中…' : '刪除' }}
+            </button>
+          </div>
         </li>
       </ul>
     </section>

@@ -41,5 +41,11 @@ export function usePoop() {
     return data ?? []
   }
 
-  return { logPoop, poopsForSession }
+  /** 刪除單筆便便記錄（多記了可移除） */
+  async function deletePoop(id: string): Promise<void> {
+    const { error } = await supabase.from('poop_logs').delete().eq('id', id)
+    if (error) throw error
+  }
+
+  return { logPoop, poopsForSession, deletePoop }
 }
