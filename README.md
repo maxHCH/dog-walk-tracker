@@ -9,7 +9,16 @@ Nuxt 4 + Vue 3 + Tailwind + Supabase。
 |------|------|------|
 | **Phase 1** | ✅ 已完成 | Email 登入、散步計時、一鍵便便記錄、今日摘要首頁 |
 | **Phase 2** | ✅ 已完成 | 歷史列表（依日期分組）、近 7 天趨勢/性狀/顏色長條圖、刪除散步、GPS 距離/路線追蹤、結束散步備註、**PWA（可安裝＋離線）** |
-| Phase 3 | ⏳ 規劃 | Claude AI 週報、異常警示（`/analysis` 佔位頁已建） |
+| **Phase 3** | ✅ 已完成 | Claude AI 健康週報：分析近 7 天散步＋便便趨勢，產生健康摘要、建議與就醫警示（`/analysis`） |
+
+## AI 健康週報（Phase 3）
+
+- **on-demand**：使用者按鈕觸發 `POST /api/ai-report`（server route），結果快取於 `ai_reports`，前端讀最新一份；可「重新產生」。
+- **API key 不外洩**：`ANTHROPIC_API_KEY` 只在 server 端使用（`runtimeConfig.anthropicApiKey`）。
+- **模型**：`ANTHROPIC_MODEL`（預設 `claude-sonnet-4-6`；可設為 `claude-opus-4-8` 提升分析深度）。
+- **結構化輸出**：用 forced tool use（相容 SDK 0.39）取得 summary／便便評估／活動評估／建議／異常／就醫旗標。
+- **資料不足保護**：少於 2 天或記錄 < 3 筆時不分析，提示「多記幾天再來」，不亂掰。
+- 不需新 migration（`ai_reports` 表已在 `001_init.sql`）。
 
 ## PWA
 
@@ -71,11 +80,12 @@ Nuxt 4 + Vue 3 + Tailwind + Supabase。
 app/
 ├── components/   WalkTimer, WalkEndSheet, PoopForm, PoopPill, StatsCard, BottomNav,
 │                 WeekTrendChart, DistChart, RouteThumb, PwaPrompt, DogProfileSheet
-├── composables/  useWalk, usePoop, useToday, useGeo, useHistory, useStats, useDog
+├── composables/  useWalk, usePoop, useToday, useGeo, useHistory, useStats, useDog, useAiReport
 ├── pages/        index, walk, history, analysis, login, confirm
 ├── types/        database.ts（Supabase 型別）
 └── utils/        poop.ts（性狀/顏色設定）, time.ts, geo.ts（haversine/路線投影）,
                   dog.ts（年齡換算/性別）
+server/api/       ai-report.post.ts（Claude 健康週報，server-only）
 public/           icon.svg, pwa-192/512, apple-touch-icon, favicon
-supabase/migrations/  001_init.sql, 002_dogs.sql
+supabase/migrations/  001_init.sql, 002_dogs.sql, 003/004 狗狗欄位演進
 ```
