@@ -9,6 +9,7 @@ const { active, isWalking, loading, startWalk, endWalk } = useWalk()
 const { logPoop, poopsForSession } = usePoop()
 const { dog } = useDog()
 const geo = useGeo()
+const wakeLock = useWakeLock()
 const router = useRouter()
 
 const sheetOpen = ref(false)
@@ -21,8 +22,10 @@ watch(active, async (s) => {
   if (s) {
     poops.value = await poopsForSession(s.id)
     if (geo.status.value === 'idle') geo.start()
+    wakeLock.request() // 散步中保持螢幕亮，避免頁面凍結中斷 GPS
   } else {
     poops.value = []
+    wakeLock.release()
   }
 }, { immediate: true })
 
@@ -50,6 +53,7 @@ async function onStart() {
   try {
     await startWalk(dog.value?.name || undefined)
     geo.start()
+    wakeLock.request()
   } catch (e: any) {
     errorMsg.value = e?.message ?? '無法開始散步'
   }
@@ -70,6 +74,7 @@ async function onEndConfirm(note: string) {
     const { distanceM, route } = geo.snapshot()
     await endWalk({ distanceM, route, note })
     geo.reset()
+    wakeLock.release()
     endSheetOpen.value = false
     router.push('/')
   } catch (e: any) {
@@ -104,6 +109,9 @@ async function onEndConfirm(note: string) {
           <span class="text-2xl font-bold tabular-nums">{{ formatDistance(geo.distanceM.value) }}</span>
         </div>
         <p v-if="geoHint" class="mt-1 text-xs text-muted">{{ geoHint }}</p>
+        <p v-else-if="wakeLock.active.value" class="mt-1 flex items-center gap-1 text-xs text-muted">
+          <Icon name="lucide:sun" /> 螢幕保持亮著，持續記錄路線
+        </p>
 
         <!-- 一鍵記錄便便（戶外大按鈕） -->
         <button

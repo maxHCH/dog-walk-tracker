@@ -7,6 +7,8 @@ export interface EndWalkExtras {
   distanceM?: number | null
   route?: RoutePoint[] | null
   note?: string | null
+  /** 指定結束時間（忘記結束時回填用）；預設為現在 */
+  endedAt?: string
 }
 
 // 散步狀態管理（計劃書 §5.1）
@@ -63,8 +65,8 @@ export function useWalk() {
     if (!active.value) return null
     loading.value = true
     try {
-      const endedAt = new Date().toISOString()
-      const duration = diffSec(active.value.started_at, endedAt)
+      const endedAt = extras.endedAt ?? new Date().toISOString()
+      const duration = Math.max(0, diffSec(active.value.started_at, endedAt))
       const note = extras.note?.trim() || null
       const { data, error } = await supabase
         .from('walk_sessions')

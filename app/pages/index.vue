@@ -7,7 +7,7 @@ import { ageFromBirthYear, genderLabel } from '~/utils/dog'
 // 一眼看懂今日狀況，不需滾動。
 const user = useSupabaseUser()
 const { fetchToday } = useToday()
-const { isWalking } = useWalk()
+const { active, isWalking, endWalk } = useWalk()
 const { deletePoop } = usePoop()
 const { dog, loaded: dogLoaded, fetchDog, saveDog } = useDog()
 
@@ -19,15 +19,46 @@ const { data: summary, refresh, pending } = await useAsyncData(
 await useAsyncData('dog', () => fetchDog(), { watch: [user] })
 
 // 從散步頁返回、或 App 由背景回到前景時刷新數字
-onActivated(() => refresh())
+const nowTs = ref(Date.now())
+onActivated(() => { refresh(); nowTs.value = Date.now() })
 onMounted(() => {
+  nowTs.value = Date.now()
   document.addEventListener('visibilitychange', onVisible)
 })
 onUnmounted(() => {
   document.removeEventListener('visibilitychange', onVisible)
 })
 function onVisible() {
-  if (document.visibilityState === 'visible') refresh()
+  if (document.visibilityState === 'visible') {
+    refresh()
+    nowTs.value = Date.now()
+  }
+}
+
+// 進行中散步：從首頁直接結束（B）＋ 忘記結束偵測（C）
+const STALE_HOURS = 2
+const confirmEndBanner = ref(false)
+const endingWalk = ref(false)
+const walkHours = computed(() =>
+  active.value ? (nowTs.value - new Date(active.value.started_at).getTime()) / 3600000 : 0,
+)
+const isStaleWalk = computed(() => isWalking.value && walkHours.value >= STALE_HOURS)
+
+async function endActiveWalk(endedAt?: string) {
+  endingWalk.value = true
+  try {
+    await endWalk(endedAt ? { endedAt } : {})
+    confirmEndBanner.value = false
+    await refresh()
+  } finally {
+    endingWalk.value = false
+  }
+}
+// C：用「開始時間 + 指定分鐘」當結束時間，回填較接近的時長
+function endWithDuration(minutes: number) {
+  if (!active.value) return
+  const start = new Date(active.value.started_at).getTime()
+  endActiveWalk(new Date(start + minutes * 60000).toISOString())
 }
 
 const greeting = computed(() => {
@@ -110,17 +141,63 @@ const today = new Intl.DateTimeFormat('zh-TW', { month: 'long', day: 'numeric', 
       <span>幫狗狗建立基本資料，首頁就會跟牠打招呼 ›</span>
     </button>
 
-    <!-- 散步中提示 -->
-    <NuxtLink
-      v-if="isWalking"
-      to="/walk"
-      class="mt-6 flex items-center justify-between rounded-3xl bg-walk px-5 py-4 text-white shadow-float"
+    <!-- 散步中提示（可一鍵結束，B） -->
+    <div
+      v-if="isWalking && !isStaleWalk"
+      class="mt-6 rounded-3xl bg-walk px-5 py-4 text-white shadow-float"
     >
-      <span class="flex items-center gap-2.5 font-semibold">
-        <span class="h-2.5 w-2.5 animate-pulse rounded-full bg-white" /> 散步進行中…
-      </span>
-      <span class="text-sm opacity-90">回到計時 ›</span>
-    </NuxtLink>
+      <div class="flex items-center justify-between gap-2">
+        <span class="flex items-center gap-2.5 font-semibold">
+          <span class="h-2.5 w-2.5 animate-pulse rounded-full bg-white" /> 散步進行中…
+        </span>
+        <div class="flex items-center gap-2">
+          <NuxtLink to="/walk" class="rounded-full bg-white/15 px-3 py-1.5 text-sm active:scale-95">回到計時</NuxtLink>
+          <button class="rounded-full bg-white/15 px-3 py-1.5 text-sm active:scale-95" @click="confirmEndBanner = true">
+            結束
+          </button>
+        </div>
+      </div>
+      <!-- 結束確認 -->
+      <div v-if="confirmEndBanner" class="mt-3 flex items-center gap-2 border-t border-white/20 pt-3">
+        <span class="flex-1 text-xs text-white/85">結束這次散步？（從首頁結束不會記錄路線）</span>
+        <button class="rounded-lg bg-white/15 px-3 py-1.5 text-xs active:scale-95" @click="confirmEndBanner = false">
+          取消
+        </button>
+        <button
+          class="rounded-lg bg-white px-3 py-1.5 text-xs font-semibold text-walk disabled:opacity-60"
+          :disabled="endingWalk"
+          @click="endActiveWalk()"
+        >
+          {{ endingWalk ? '結束中…' : '結束' }}
+        </button>
+      </div>
+    </div>
+
+    <!-- 忘記結束偵測（C）：散步超過 2 小時 -->
+    <section v-if="isStaleWalk" class="card mt-6 p-4 ring-1 ring-alert/30">
+      <p class="flex items-center gap-1.5 text-sm font-semibold text-alert">
+        <Icon name="lucide:triangle-alert" class="shrink-0" /> 還在散步中（已 {{ Math.floor(walkHours) }} 小時）
+      </p>
+      <p class="mt-1 text-xs text-muted">忘記結束了嗎？選一個比較接近的散步時長，幫你補上結束時間：</p>
+      <div class="mt-3 grid grid-cols-4 gap-2">
+        <button
+          v-for="opt in [{ m: 30, l: '30 分' }, { m: 60, l: '1 小時' }, { m: 90, l: '90 分' }]"
+          :key="opt.m"
+          class="rounded-xl border border-ink/10 py-2.5 text-sm text-ink/80 active:scale-95 disabled:opacity-60"
+          :disabled="endingWalk"
+          @click="endWithDuration(opt.m)"
+        >
+          {{ opt.l }}
+        </button>
+        <button
+          class="rounded-xl bg-alert py-2.5 text-sm font-semibold text-white active:scale-95 disabled:opacity-60"
+          :disabled="endingWalk"
+          @click="endActiveWalk()"
+        >
+          用現在
+        </button>
+      </div>
+    </section>
 
     <!-- 今日總覽 -->
     <section class="mt-8">
