@@ -12,6 +12,21 @@ const CONSISTENCY_LABEL: Record<string, string> = {
 const COLOR_LABEL: Record<string, string> = {
   brown: '棕色', yellow: '黃色', black: '黑色', red: '帶血',
 }
+// 對應 app/utils/weather.ts 的 WeatherStatus（server 端不便 import，故就近定義）
+const WEATHER_LABEL: Record<string, string> = {
+  clear: '晴', partly: '多雲', cloudy: '陰', fog: '霧',
+  drizzle: '毛毛雨', rain: '雨', snow: '雪', thunder: '雷雨',
+}
+
+interface Weather { status: string; tempC: number | null; humidity: number | null }
+
+/** 取陣列中出現最多次的元素（同次數取先出現者） */
+function mostCommon(arr: string[]): string | undefined {
+  if (!arr.length) return undefined
+  const count = new Map<string, number>()
+  for (const x of arr) count.set(x, (count.get(x) ?? 0) + 1)
+  return [...count.entries()].sort((a, b) => b[1] - a[1])[0]![0]
+}
 
 function localDate(iso: string): string {
   const d = new Date(iso)
@@ -41,7 +56,7 @@ export default defineEventHandler(async (event) => {
   const periodEnd = localDate(new Date().toISOString())
 
   const [walksRes, poopsRes, dogRes] = await Promise.all([
-    supabase.from('walk_sessions').select('started_at,duration_sec,distance_m')
+    supabase.from('walk_sessions').select('started_at,duration_sec,distance_m,weather_json')
       .gte('started_at', sinceIso).not('ended_at', 'is', null),
     supabase.from('poop_logs').select('logged_at,consistency,color,note').gte('logged_at', sinceIso),
     supabase.from('dogs').select('name,gender,birth_year').eq('user_id', user.id).maybeSingle(),
@@ -49,7 +64,7 @@ export default defineEventHandler(async (event) => {
   if (walksRes.error) throw createError({ statusCode: 500, statusMessage: walksRes.error.message })
   if (poopsRes.error) throw createError({ statusCode: 500, statusMessage: poopsRes.error.message })
 
-  const walks = (walksRes.data ?? []) as { started_at: string; duration_sec: number | null }[]
+  const walks = (walksRes.data ?? []) as { started_at: string; duration_sec: number | null; weather_json: Weather | null }[]
   const poops = (poopsRes.data ?? []) as { logged_at: string; consistency: string; color: string; note: string | null }[]
   const dog = dogRes.data as { name: string; gender: string | null; birth_year: number | null } | null
 
@@ -67,22 +82,57 @@ export default defineEventHandler(async (event) => {
     p.consistency !== 'normal' || p.color !== 'brown'
   const isCritical = (p: { color: string }) => p.color === 'black' || p.color === 'red'
 
-  const perDay = new Map<string, { walks: number; durationMin: number; poops: number; abnormalPoops: number }>()
+  type DayAgg = {
+    walks: number; durationMin: number; poops: number; abnormalPoops: number
+    temps: number[]; conditions: string[]
+  }
+  const perDay = new Map<string, DayAgg>()
   const ensure = (k: string) => {
     let d = perDay.get(k)
-    if (!d) { d = { walks: 0, durationMin: 0, poops: 0, abnormalPoops: 0 }; perDay.set(k, d) }
+    if (!d) { d = { walks: 0, durationMin: 0, poops: 0, abnormalPoops: 0, temps: [], conditions: [] }; perDay.set(k, d) }
     return d
   }
   for (const w of walks) {
     const d = ensure(localDate(w.started_at))
     d.walks++
     d.durationMin += Math.round((w.duration_sec ?? 0) / 60)
+    const wx = w.weather_json
+    if (wx) {
+      if (wx.tempC != null) d.temps.push(wx.tempC)
+      if (wx.status) d.conditions.push(WEATHER_LABEL[wx.status] ?? wx.status)
+    }
   }
   for (const p of poops) {
     const d = ensure(localDate(p.logged_at))
     d.poops++
     if (isAbnormal(p)) d.abnormalPoops++
   }
+
+  // 天氣彙整：覆蓋率、溫度範圍、炎熱/寒冷散步次數、天氣型態分布
+  const weathers = walks.map((w) => w.weather_json).filter((w): w is Weather => !!w)
+  const temps = weathers.map((w) => w.tempC).filter((t): t is number => t != null)
+  const round1 = (n: number) => Math.round(n * 10) / 10
+  const weatherSummary = weathers.length
+    ? {
+        coveredWalks: weathers.length,
+        totalWalks: walks.length,
+        tempC: temps.length
+          ? {
+              min: Math.min(...temps),
+              max: Math.max(...temps),
+              avg: round1(temps.reduce((s, t) => s + t, 0) / temps.length),
+            }
+          : null,
+        hotWalks: temps.filter((t) => t >= 28).length, // 炎熱：留意中暑、縮短時長
+        coldWalks: temps.filter((t) => t <= 10).length, // 寒冷：留意保暖
+        conditions: [...new Set(weathers.map((w) => WEATHER_LABEL[w.status] ?? w.status))]
+          .map((label) => ({
+            label,
+            count: weathers.filter((w) => (WEATHER_LABEL[w.status] ?? w.status) === label).length,
+          }))
+          .sort((a, b) => b.count - a.count),
+      }
+    : null
 
   const payload = {
     dog: {
@@ -98,7 +148,16 @@ export default defineEventHandler(async (event) => {
       abnormalPoops: poops.filter(isAbnormal).length,
       criticalPoops: poops.filter(isCritical).length,
     },
-    perDay: [...perDay.entries()].sort().map(([date, v]) => ({ date, ...v })),
+    weather: weatherSummary,
+    perDay: [...perDay.entries()].sort().map(([date, v]) => ({
+      date,
+      walks: v.walks,
+      durationMin: v.durationMin,
+      poops: v.poops,
+      abnormalPoops: v.abnormalPoops,
+      avgTempC: v.temps.length ? round1(v.temps.reduce((s, t) => s + t, 0) / v.temps.length) : null,
+      weather: mostCommon(v.conditions),
+    })),
     poops: poops
       .slice()
       .sort((a, b) => a.logged_at.localeCompare(b.logged_at))
@@ -120,6 +179,11 @@ export default defineEventHandler(async (event) => {
     '- 便便性狀異常（軟便/稀水/偏硬）或顏色異常（黃/黑/帶血）要溫和指出。',
     '- 黑色或帶血便屬警訊：請建議盡快就醫，並把 vet_recommended 設為 true。',
     '- 散步活動量明顯偏少時溫和提醒增加，但不要過度恐嚇。',
+    '- 資料含散步當下天氣（溫度、天氣型態）。請結合天氣解讀：',
+    '  · 高溫（≥28°C）散步要提醒中暑風險、避開正午、縮短時長、備水、留意柏油燙腳掌；',
+    '  · 低溫（≤10°C）或雨雪天提醒保暖防滑、回家擦乾；',
+    '  · 若便便異常與某些天氣同時出現，可溫和點出可能關聯（但不過度推論因果）。',
+    '- 沒有天氣資料時，weather_assessment 就說明尚未收集到足夠天氣資料即可，不要編造。',
     '- 若整體看起來健康，就給正向肯定，不要硬找問題。',
     '務必只透過 health_report 工具回覆。',
   ].join('\n')
@@ -133,6 +197,7 @@ export default defineEventHandler(async (event) => {
         summary: { type: 'string', description: '整體健康摘要，2–3 句白話繁中' },
         poop_assessment: { type: 'string', description: '便便趨勢與性狀/顏色觀察' },
         activity_assessment: { type: 'string', description: '散步活動量觀察' },
+        weather_assessment: { type: 'string', description: '結合散步天氣（溫度/型態）的觀察與提醒；無天氣資料時說明尚未收集到' },
         suggestions: {
           type: 'array',
           items: { type: 'string' },
@@ -141,7 +206,7 @@ export default defineEventHandler(async (event) => {
         anomaly: { type: 'boolean', description: '是否有需要注意的異常狀況' },
         vet_recommended: { type: 'boolean', description: '是否建議就醫（黑便/血便等警訊為 true）' },
       },
-      required: ['summary', 'poop_assessment', 'activity_assessment', 'suggestions', 'anomaly', 'vet_recommended'],
+      required: ['summary', 'poop_assessment', 'activity_assessment', 'weather_assessment', 'suggestions', 'anomaly', 'vet_recommended'],
     },
   }
 

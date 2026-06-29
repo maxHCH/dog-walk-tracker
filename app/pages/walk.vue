@@ -1,14 +1,16 @@
 <script setup lang="ts">
 import type { PoopInput } from '~/composables/usePoop'
 import type { PoopLog } from '~/types/database'
+import type { Weather } from '~/utils/weather'
 import { diffSec } from '~/utils/time'
 import { formatDistance } from '~/utils/geo'
 
 // 散步進行中畫面（計劃書 §4 walk.vue）
-const { active, isWalking, loading, startWalk, endWalk } = useWalk()
+const { active, isWalking, loading, startWalk, setWeather, endWalk } = useWalk()
 const { logPoop, poopsForSession } = usePoop()
 const { dog } = useDog()
 const geo = useGeo()
+const weather = useWeather()
 const wakeLock = useWakeLock()
 const router = useRouter()
 
@@ -16,11 +18,15 @@ const sheetOpen = ref(false)
 const endSheetOpen = ref(false)
 const poops = ref<PoopLog[]>([])
 const errorMsg = ref('')
+// 本次散步天氣（開始時自動抓，結束畫面顯示／可改）
+const currentWeather = ref<Weather | null>(null)
 
 // 進入頁面：若已有進行中的散步，載入便便記錄並開始 GPS 追蹤
 watch(active, async (s) => {
   if (s) {
     poops.value = await poopsForSession(s.id)
+    // App 重開回到進行中的散步：還原先前抓到的天氣
+    currentWeather.value = (s.weather_json as Weather | null) ?? currentWeather.value
     if (geo.status.value === 'idle') geo.start()
     wakeLock.request() // 散步中保持螢幕亮，避免頁面凍結中斷 GPS
   } else {
@@ -54,6 +60,13 @@ async function onStart() {
     await startWalk(dog.value?.name || undefined)
     geo.start()
     wakeLock.request()
+    // 非同步抓當下天氣並回寫；失敗靜默降級，不擋散步
+    currentWeather.value = null
+    weather.fetchCurrent().then((w) => {
+      if (!w) return
+      currentWeather.value = w
+      setWeather(w).catch(() => {})
+    })
   } catch (e: any) {
     errorMsg.value = e?.message ?? '無法開始散步'
   }
@@ -69,11 +82,12 @@ async function onPoopSubmit(input: PoopInput) {
   }
 }
 
-async function onEndConfirm(note: string) {
+async function onEndConfirm(payload: { note: string; weather: Weather | null }) {
   try {
     const { distanceM, route } = geo.snapshot()
-    await endWalk({ distanceM, route, note })
+    await endWalk({ distanceM, route, note: payload.note, weather: payload.weather })
     geo.reset()
+    currentWeather.value = null
     wakeLock.release()
     endSheetOpen.value = false
     router.push('/')
@@ -146,6 +160,8 @@ async function onEndConfirm(note: string) {
       :duration-sec="liveDurationSec"
       :distance-m="geo.distanceM.value"
       :poop-count="poops.length"
+      :weather="currentWeather"
+      :weather-loading="weather.loading.value"
       :saving="loading"
       @confirm="onEndConfirm"
     />

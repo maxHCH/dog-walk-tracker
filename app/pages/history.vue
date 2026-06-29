@@ -2,6 +2,8 @@
 import { formatDuration } from '~/utils/time'
 import { formatDistance } from '~/utils/geo'
 import type { RoutePoint } from '~/utils/geo'
+import type { Weather } from '~/utils/weather'
+import { statusMeta } from '~/utils/weather'
 
 // 歷史記錄：頂部近 7 天趨勢/分布，下方依日期分組的散步＋便便列表。
 const { fetchHistory, deleteWalk } = useHistory()
@@ -29,6 +31,8 @@ async function onDelete(id: string) {
 function timeLabel(iso: string): string {
   return new Date(iso).toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' })
 }
+
+const asWeather = (j: unknown): Weather => j as Weather
 
 const hasAny = computed(() => (groups.value?.length ?? 0) > 0)
 </script>
@@ -123,6 +127,10 @@ const hasAny = computed(() => (groups.value?.length ?? 0) > 0)
                   <span class="inline-flex items-center gap-1"><Icon name="lucide:timer" /> {{ formatDuration(w.duration_sec ?? 0) }}</span>
                   <span v-if="w.distance_m" class="inline-flex items-center gap-1"><Icon name="lucide:map-pin" /> {{ formatDistance(w.distance_m) }}</span>
                   <span v-if="w.poops.length" class="inline-flex items-center gap-1"><Icon name="app:poop" /> {{ w.poops.length }} 次</span>
+                  <span v-if="w.weather_json" class="inline-flex items-center gap-1">
+                    <Icon :name="statusMeta(asWeather(w.weather_json).status).icon" />
+                    <template v-if="asWeather(w.weather_json).tempC != null">{{ Math.round(asWeather(w.weather_json).tempC!) }}°</template>
+                  </span>
                 </div>
                 <div v-if="w.poops.length" class="mt-2 flex flex-wrap gap-1.5">
                   <PoopPill v-for="p in w.poops" :key="p.id" :consistency="p.consistency" :color="p.color" />

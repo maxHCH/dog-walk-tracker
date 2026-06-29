@@ -110,6 +110,12 @@ async function onGenerate() {
         <p class="eyebrow mb-2.5 text-muted">散步活動量</p>
         <p class="text-sm leading-relaxed text-ink/90">{{ report.activity_assessment }}</p>
       </section>
+      <section v-if="report.weather_assessment" class="card p-5">
+        <p class="eyebrow mb-2.5 flex items-center gap-1.5 text-muted">
+          <Icon name="lucide:cloud-sun" /> 天氣與健康
+        </p>
+        <p class="text-sm leading-relaxed text-ink/90">{{ report.weather_assessment }}</p>
+      </section>
 
       <!-- 建議 -->
       <section v-if="report.suggestions?.length" class="card p-5">

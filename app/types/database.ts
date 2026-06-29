@@ -52,6 +52,7 @@ export interface Database {
           distance_m: number | null
           route_json: Json | null
           note: string | null
+          weather_json: Json | null
           created_at: string
         }
         Insert: {
@@ -64,6 +65,7 @@ export interface Database {
           distance_m?: number | null
           route_json?: Json | null
           note?: string | null
+          weather_json?: Json | null
           created_at?: string
         }
         Update: {
@@ -76,6 +78,7 @@ export interface Database {
           distance_m?: number | null
           route_json?: Json | null
           note?: string | null
+          weather_json?: Json | null
           created_at?: string
         }
         Relationships: []

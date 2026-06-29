@@ -7,6 +7,8 @@ export interface HealthReport {
   summary: string
   poop_assessment: string
   activity_assessment: string
+  /** 結合散步天氣的觀察（Phase 3.1）；舊報告可能沒有此欄位 */
+  weather_assessment?: string
   suggestions: string[]
   anomaly: boolean
   vet_recommended: boolean
