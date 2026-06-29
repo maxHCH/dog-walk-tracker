@@ -26,7 +26,8 @@ export default defineNuxtConfig({
       description: '散步計時、便便健康記錄與趨勢分析',
       lang: 'zh-TW',
       theme_color: '#0F6E56',
-      background_color: '#E1F5EE',
+      // 與 app 實際底色一致（奶油色），PWA 啟動畫面不會先閃別的顏色
+      background_color: '#F4EEE1',
       display: 'standalone',
       orientation: 'portrait',
       start_url: '/',
@@ -81,6 +82,9 @@ export default defineNuxtConfig({
     head: {
       title: '狗狗散步記錄',
       viewport: 'width=device-width, initial-scale=1, viewport-fit=cover',
+      // 關鍵內聯樣式：在打包 CSS 載入前就替 html 鋪上奶油底色，
+      // 避免冷啟動／深色模式下先閃一下黑畫面。
+      style: [{ children: 'html{background:#f4eee1}' }],
       meta: [
         { name: 'theme-color', content: '#0F6E56' },
         { name: 'mobile-web-app-capable', content: 'yes' },

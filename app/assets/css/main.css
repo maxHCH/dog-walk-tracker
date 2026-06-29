@@ -6,6 +6,8 @@
   html {
     /* 行動裝置安全區（iPhone 瀏海/底部） */
     -webkit-tap-highlight-color: transparent;
+    /* 純色奶油底：在 body 漸層／JS 載入前就先鋪好，避免冷啟動黑閃 */
+    background: #f4eee1;
   }
   body {
     @apply text-ink antialiased;

@@ -1,0 +1,26 @@
+<!-- App 啟動載入畫面：在 JS 接手前先顯示品牌與旋轉指示，避免空白／黑畫面。 -->
+<div style="
+  position: fixed; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 18px;
+  background: #f4eee1; color: #0f6e56;
+  font-family: 'Noto Serif TC', ui-serif, Georgia, serif;
+">
+  <!-- 狗掌（Lucide paw-print 的簡化線條） -->
+  <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#0f6e56"
+    stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="11" cy="4" r="2" />
+    <circle cx="18" cy="8" r="2" />
+    <circle cx="4" cy="9" r="2" />
+    <path d="M9 14.5C7.5 16 6 16 6 18a3 3 0 0 0 5.5 1.7 3 3 0 0 0 5.5-1.7c0-2-1.5-2-3-3.5-1-1-2-2.5-3-2.5s-2 1.5-2 2.5Z" />
+  </svg>
+  <div style="font-size: 18px; font-weight: 600; letter-spacing: 0.02em;">狗狗散步記錄</div>
+  <div style="
+    width: 26px; height: 26px;
+    border: 3px solid rgba(15,110,86,0.2); border-top-color: #0f6e56;
+    border-radius: 50%; animation: dwt-spin 0.8s linear infinite;
+  "></div>
+</div>
+<style>
+  @keyframes dwt-spin { to { transform: rotate(360deg); } }
+</style>
