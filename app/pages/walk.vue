@@ -2,6 +2,7 @@
 import type { PoopInput } from '~/composables/usePoop'
 import type { PoopLog } from '~/types/database'
 import type { Weather } from '~/utils/weather'
+import type { EnergyLevel } from '~/utils/energy'
 import { diffSec } from '~/utils/time'
 import { formatDistance } from '~/utils/geo'
 
@@ -82,10 +83,10 @@ async function onPoopSubmit(input: PoopInput) {
   }
 }
 
-async function onEndConfirm(payload: { note: string; weather: Weather | null }) {
+async function onEndConfirm(payload: { note: string; weather: Weather | null; energy: EnergyLevel | null }) {
   try {
     const { distanceM, route } = geo.snapshot()
-    await endWalk({ distanceM, route, note: payload.note, weather: payload.weather })
+    await endWalk({ distanceM, route, note: payload.note, weather: payload.weather, energy: payload.energy })
     geo.reset()
     currentWeather.value = null
     wakeLock.release()

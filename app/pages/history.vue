@@ -4,6 +4,7 @@ import { formatDistance } from '~/utils/geo'
 import type { RoutePoint } from '~/utils/geo'
 import type { Weather } from '~/utils/weather'
 import { statusMeta } from '~/utils/weather'
+import { energyMeta } from '~/utils/energy'
 
 // 歷史記錄：頂部近 7 天趨勢/分布，下方依日期分組的散步＋便便列表。
 const { fetchHistory, deleteWalk } = useHistory()
@@ -71,7 +72,7 @@ const hasAny = computed(() => (groups.value?.length ?? 0) > 0)
     <!-- 便便分布 -->
     <section v-if="stats && stats.totalPoops" class="mt-3 grid gap-3 sm:grid-cols-2">
       <div class="card p-4">
-        <h2 class="mb-3 text-sm font-semibold text-muted">性狀分布</h2>
+        <h2 class="mb-3 text-sm font-semibold text-muted">形狀分布</h2>
         <DistChart :items="stats.consistency" />
       </div>
       <div class="card p-4">
@@ -130,6 +131,13 @@ const hasAny = computed(() => (groups.value?.length ?? 0) > 0)
                   <span v-if="w.weather_json" class="inline-flex items-center gap-1">
                     <Icon :name="statusMeta(asWeather(w.weather_json).status).icon" />
                     <template v-if="asWeather(w.weather_json).tempC != null">{{ Math.round(asWeather(w.weather_json).tempC!) }}°</template>
+                  </span>
+                  <span
+                    v-if="w.energy"
+                    class="inline-flex items-center gap-1"
+                    :class="energyMeta(w.energy).abnormal ? 'text-alert' : ''"
+                  >
+                    <Icon :name="energyMeta(w.energy).icon" /> {{ energyMeta(w.energy).label }}
                   </span>
                 </div>
                 <div v-if="w.poops.length" class="mt-2 flex flex-wrap gap-1.5">

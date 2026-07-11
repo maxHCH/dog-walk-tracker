@@ -2,6 +2,8 @@
 // 供 useSupabaseClient<Database>() 使用，確保查詢型別安全。
 // 結構比照 `supabase gen types typescript` 的官方輸出格式。
 
+import type { EnergyLevel } from '~/utils/energy'
+
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
 
 export type Consistency = 'normal' | 'soft' | 'loose' | 'hard'
@@ -53,6 +55,7 @@ export interface Database {
           route_json: Json | null
           note: string | null
           weather_json: Json | null
+          energy: EnergyLevel | null
           created_at: string
         }
         Insert: {
@@ -66,6 +69,7 @@ export interface Database {
           route_json?: Json | null
           note?: string | null
           weather_json?: Json | null
+          energy?: EnergyLevel | null
           created_at?: string
         }
         Update: {
@@ -79,6 +83,7 @@ export interface Database {
           route_json?: Json | null
           note?: string | null
           weather_json?: Json | null
+          energy?: EnergyLevel | null
           created_at?: string
         }
         Relationships: []

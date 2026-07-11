@@ -3,6 +3,8 @@ import { formatDuration } from '~/utils/time'
 import { formatDistance } from '~/utils/geo'
 import type { Weather, WeatherStatus } from '~/utils/weather'
 import { WEATHER_STATUSES, statusMeta, codeForStatus } from '~/utils/weather'
+import type { EnergyLevel } from '~/utils/energy'
+import { ENERGY_LEVELS, energyMeta } from '~/utils/energy'
 
 // 結束散步前的確認 sheet：顯示本次摘要 + 天氣（自動偵測，可手動改）+ 可選備註。
 const open = defineModel<boolean>('open', { default: false })
@@ -16,18 +18,23 @@ const props = defineProps<{
   saving?: boolean
 }>()
 
-const emit = defineEmits<{ confirm: [payload: { note: string; weather: Weather | null }] }>()
+const emit = defineEmits<{
+  confirm: [payload: { note: string; weather: Weather | null; energy: EnergyLevel | null }]
+}>()
 
 const note = ref('')
 // 天氣：開啟時以偵測結果為預設，使用者可覆寫
 const status = ref<WeatherStatus | null>(null)
 const tempC = ref<number | null>(null)
+// 活力狀態：純手動選（無自動偵測），預設未選
+const energy = ref<EnergyLevel | null>(null)
 
 watch(open, (v) => {
   if (!v) return
   note.value = ''
   status.value = props.weather?.status ?? null
   tempC.value = props.weather?.tempC ?? null
+  energy.value = null
 })
 
 // 偵測較慢時（開啟後才回來），尚未手動選的話帶入偵測值
@@ -51,7 +58,7 @@ function buildWeather(): Weather | null {
 }
 
 function onConfirm() {
-  emit('confirm', { note: note.value, weather: buildWeather() })
+  emit('confirm', { note: note.value, weather: buildWeather(), energy: energy.value })
 }
 </script>
 
@@ -109,6 +116,27 @@ function onConfirm() {
                 class="w-24 rounded-xl border border-ink/10 px-3 py-2 text-base focus:border-walk focus:outline-none"
               >
               <span class="text-sm text-muted">°C</span>
+            </div>
+          </div>
+
+          <!-- 活力狀態：純手動選（可不選） -->
+          <div class="mt-4">
+            <div class="mb-2 flex items-center gap-1.5 text-xs text-walk/70">
+              <Icon name="lucide:activity" /> 這趟活力
+            </div>
+            <div class="flex flex-wrap gap-1.5">
+              <button
+                v-for="lv in ENERGY_LEVELS"
+                :key="lv"
+                type="button"
+                class="flex items-center gap-1 rounded-full px-2.5 py-1.5 text-sm transition-colors"
+                :class="energy === lv
+                  ? (energyMeta(lv).abnormal ? 'bg-alert text-white' : 'bg-walk text-white')
+                  : (energyMeta(lv).abnormal ? 'bg-alert-bg text-alert' : 'bg-walk-bg text-walk')"
+                @click="energy = energy === lv ? null : lv"
+              >
+                <Icon :name="energyMeta(lv).icon" /> {{ energyMeta(lv).label }}
+              </button>
             </div>
           </div>
 

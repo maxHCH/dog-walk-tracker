@@ -1,6 +1,7 @@
 import type { Database, WalkSession } from '~/types/database'
 import type { RoutePoint } from '~/utils/geo'
 import type { Weather } from '~/utils/weather'
+import type { EnergyLevel } from '~/utils/energy'
 import { diffSec } from '~/utils/time'
 
 /** 結束散步時可一併寫入的資料 */
@@ -10,6 +11,8 @@ export interface EndWalkExtras {
   note?: string | null
   /** 天氣（結束畫面手動覆寫用）；undefined = 沿用開始時抓到的 */
   weather?: Weather | null
+  /** 這趟活力狀態（結束畫面手動選）；null = 未選 */
+  energy?: EnergyLevel | null
   /** 指定結束時間（忘記結束時回填用）；預設為現在 */
   endedAt?: string
 }
@@ -96,6 +99,7 @@ export function useWalk() {
           route_json: extras.route ?? null,
           note,
           weather_json: weather,
+          energy: extras.energy ?? null,
         })
         .eq('id', active.value.id)
         .select('*')

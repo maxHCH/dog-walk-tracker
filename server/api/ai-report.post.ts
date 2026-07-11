@@ -17,6 +17,10 @@ const WEATHER_LABEL: Record<string, string> = {
   clear: '晴', partly: '多雲', cloudy: '陰', fog: '霧',
   drizzle: '毛毛雨', rain: '雨', snow: '雪', thunder: '雷雨',
 }
+// 對應 app/utils/energy.ts 的 EnergyLevel；low（不太動）視為需注意
+const ENERGY_LABEL: Record<string, string> = {
+  high: '活力充沛', normal: '正常', tired: '累了', low: '不太動',
+}
 
 interface Weather { status: string; tempC: number | null; humidity: number | null }
 
@@ -56,7 +60,7 @@ export default defineEventHandler(async (event) => {
   const periodEnd = localDate(new Date().toISOString())
 
   const [walksRes, poopsRes, dogRes] = await Promise.all([
-    supabase.from('walk_sessions').select('started_at,duration_sec,distance_m,weather_json')
+    supabase.from('walk_sessions').select('started_at,duration_sec,distance_m,weather_json,energy')
       .gte('started_at', sinceIso).not('ended_at', 'is', null),
     supabase.from('poop_logs').select('logged_at,consistency,color,note').gte('logged_at', sinceIso),
     supabase.from('dogs').select('name,gender,birth_year').eq('user_id', user.id).maybeSingle(),
@@ -64,7 +68,7 @@ export default defineEventHandler(async (event) => {
   if (walksRes.error) throw createError({ statusCode: 500, statusMessage: walksRes.error.message })
   if (poopsRes.error) throw createError({ statusCode: 500, statusMessage: poopsRes.error.message })
 
-  const walks = (walksRes.data ?? []) as { started_at: string; duration_sec: number | null; weather_json: Weather | null }[]
+  const walks = (walksRes.data ?? []) as { started_at: string; duration_sec: number | null; weather_json: Weather | null; energy: string | null }[]
   const poops = (poopsRes.data ?? []) as { logged_at: string; consistency: string; color: string; note: string | null }[]
   const dog = dogRes.data as { name: string; gender: string | null; birth_year: number | null } | null
 
@@ -84,12 +88,12 @@ export default defineEventHandler(async (event) => {
 
   type DayAgg = {
     walks: number; durationMin: number; poops: number; abnormalPoops: number
-    temps: number[]; conditions: string[]
+    temps: number[]; conditions: string[]; energies: string[]
   }
   const perDay = new Map<string, DayAgg>()
   const ensure = (k: string) => {
     let d = perDay.get(k)
-    if (!d) { d = { walks: 0, durationMin: 0, poops: 0, abnormalPoops: 0, temps: [], conditions: [] }; perDay.set(k, d) }
+    if (!d) { d = { walks: 0, durationMin: 0, poops: 0, abnormalPoops: 0, temps: [], conditions: [], energies: [] }; perDay.set(k, d) }
     return d
   }
   for (const w of walks) {
@@ -101,6 +105,7 @@ export default defineEventHandler(async (event) => {
       if (wx.tempC != null) d.temps.push(wx.tempC)
       if (wx.status) d.conditions.push(WEATHER_LABEL[wx.status] ?? wx.status)
     }
+    if (w.energy) d.energies.push(ENERGY_LABEL[w.energy] ?? w.energy)
   }
   for (const p of poops) {
     const d = ensure(localDate(p.logged_at))
@@ -134,6 +139,22 @@ export default defineEventHandler(async (event) => {
       }
     : null
 
+  // 活力彙整：覆蓋率、分布、不太動（low）次數——低活力連續出現值得注意
+  const energies = walks.map((w) => w.energy).filter((e): e is string => !!e)
+  const energySummary = energies.length
+    ? {
+        coveredWalks: energies.length,
+        totalWalks: walks.length,
+        lowWalks: energies.filter((e) => e === 'low').length, // 不太動：低活力訊號
+        distribution: [...new Set(energies)]
+          .map((level) => ({
+            label: ENERGY_LABEL[level] ?? level,
+            count: energies.filter((e) => e === level).length,
+          }))
+          .sort((a, b) => b.count - a.count),
+      }
+    : null
+
   const payload = {
     dog: {
       name: dog?.name ?? '狗狗',
@@ -149,6 +170,7 @@ export default defineEventHandler(async (event) => {
       criticalPoops: poops.filter(isCritical).length,
     },
     weather: weatherSummary,
+    energy: energySummary,
     perDay: [...perDay.entries()].sort().map(([date, v]) => ({
       date,
       walks: v.walks,
@@ -157,6 +179,7 @@ export default defineEventHandler(async (event) => {
       abnormalPoops: v.abnormalPoops,
       avgTempC: v.temps.length ? round1(v.temps.reduce((s, t) => s + t, 0) / v.temps.length) : null,
       weather: mostCommon(v.conditions),
+      energy: mostCommon(v.energies),
     })),
     poops: poops
       .slice()
@@ -176,9 +199,13 @@ export default defineEventHandler(async (event) => {
     '你不是獸醫，不做診斷，只提供觀察與一般照護建議。原則：',
     '- 一律用繁體中文，語氣親切、白話、具體，避免醫學術語堆疊。',
     '- 只依據提供的資料說話，絕不編造沒有的數據或症狀。',
-    '- 便便性狀異常（軟便/稀水/偏硬）或顏色異常（黃/黑/帶血）要溫和指出。',
+    '- 便便形狀異常（軟便/稀水/偏硬）或顏色異常（黃/黑/帶血）要溫和指出。',
     '- 黑色或帶血便屬警訊：請建議盡快就醫，並把 vet_recommended 設為 true。',
     '- 散步活動量明顯偏少時溫和提醒增加，但不要過度恐嚇。',
+    '- 資料含每趟「活力狀態」（活力充沛/正常/累了/不太動）。請併入活動量觀察：',
+    '  · 「不太動」（low）代表提不起勁，若連續多趟或多天出現，溫和點出可能的精神/健康變化，建議留意食慾與就醫評估；',
+    '  · 偶爾「累了」屬散步後正常，不需緊張；「活力充沛」給正向肯定；',
+    '  · 沒有活力資料時不要編造，就以散步時長/次數評估活動量即可。',
     '- 資料含散步當下天氣（溫度、天氣型態）。請結合天氣解讀：',
     '  · 高溫（≥28°C）散步要提醒中暑風險、避開正午、縮短時長、備水、留意柏油燙腳掌；',
     '  · 低溫（≤10°C）或雨雪天提醒保暖防滑、回家擦乾；',
@@ -195,8 +222,8 @@ export default defineEventHandler(async (event) => {
       type: 'object',
       properties: {
         summary: { type: 'string', description: '整體健康摘要，2–3 句白話繁中' },
-        poop_assessment: { type: 'string', description: '便便趨勢與性狀/顏色觀察' },
-        activity_assessment: { type: 'string', description: '散步活動量觀察' },
+        poop_assessment: { type: 'string', description: '便便趨勢與形狀/顏色觀察' },
+        activity_assessment: { type: 'string', description: '散步活動量與活力狀態觀察（結合活力充沛/累了/不太動）' },
         weather_assessment: { type: 'string', description: '結合散步天氣（溫度/型態）的觀察與提醒；無天氣資料時說明尚未收集到' },
         suggestions: {
           type: 'array',
