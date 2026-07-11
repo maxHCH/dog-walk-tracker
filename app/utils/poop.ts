@@ -1,6 +1,6 @@
 import type { Consistency, PoopColor } from '~/types/database'
 
-// 便便性狀／顏色的顯示設定（中文標籤 + 是否異常；顏色另附色票 swatch）
+// 便便形狀／顏色的顯示設定（中文標籤 + 是否異常；顏色另附色票 swatch）
 // 集中管理，元件與 AI prompt 共用，避免散落各處。
 
 export interface OptionMeta<T extends string> {
@@ -8,7 +8,7 @@ export interface OptionMeta<T extends string> {
   label: string
   /** 是否視為需要注意的異常狀態 */
   abnormal: boolean
-  /** 顏色選項的色票（性狀選項為 undefined） */
+  /** 顏色選項的色票（形狀選項為 undefined） */
   swatch?: string
 }
 

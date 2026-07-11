@@ -2,7 +2,7 @@
 import type { Consistency, PoopColor } from '~/types/database'
 import { colorMeta, consistencyMeta } from '~/utils/poop'
 
-// 性狀標籤元件（計劃書 §4 PoopPill）
+// 形狀標籤元件（計劃書 §4 PoopPill）
 const props = defineProps<{
   consistency: Consistency
   color: PoopColor

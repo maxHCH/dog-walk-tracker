@@ -1,7 +1,7 @@
 import type { Consistency, Database, PoopColor } from '~/types/database'
 import { CONSISTENCY_OPTIONS, COLOR_OPTIONS } from '~/utils/poop'
 
-// 近 7 天統計：每日散步次數/時長、便便性狀與顏色分布。
+// 近 7 天統計：每日散步次數/時長、便便形狀與顏色分布。
 // 提供給 /history 頂部的趨勢圖與分布長條圖使用。
 
 export interface DayBar {

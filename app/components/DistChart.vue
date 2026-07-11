@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { DistItem } from '~/composables/useStats'
 
-// 便便性狀 / 顏色分布的水平長條。異常項目以 alert 色標示。
+// 便便形狀 / 顏色分布的水平長條。異常項目以 alert 色標示。
 const props = defineProps<{
   items: DistItem<string>[]
 }>()

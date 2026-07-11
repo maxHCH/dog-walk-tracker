@@ -8,7 +8,7 @@ Nuxt 4 + Vue 3 + Tailwind + Supabase。
 | 階段 | 狀態 | 內容 |
 |------|------|------|
 | **Phase 1** | ✅ 已完成 | Email 登入、散步計時、一鍵便便記錄、今日摘要首頁 |
-| **Phase 2** | ✅ 已完成 | 歷史列表（依日期分組）、近 7 天趨勢/性狀/顏色長條圖、刪除散步、GPS 距離/路線追蹤、結束散步備註、**PWA（可安裝＋離線）** |
+| **Phase 2** | ✅ 已完成 | 歷史列表（依日期分組）、近 7 天趨勢/形狀/顏色長條圖、刪除散步、GPS 距離/路線追蹤、結束散步備註、**PWA（可安裝＋離線）** |
 | **Phase 3** | ✅ 已完成 | Claude AI 健康週報：分析近 7 天散步＋便便趨勢，產生健康摘要、建議與就醫警示（`/analysis`） |
 
 ## AI 健康週報（Phase 3）
@@ -83,7 +83,7 @@ app/
 ├── composables/  useWalk, usePoop, useToday, useGeo, useHistory, useStats, useDog, useAiReport
 ├── pages/        index, walk, history, analysis, login, confirm
 ├── types/        database.ts（Supabase 型別）
-└── utils/        poop.ts（性狀/顏色設定）, time.ts, geo.ts（haversine/路線投影）,
+└── utils/        poop.ts（形狀/顏色設定）, time.ts, geo.ts（haversine/路線投影）,
                   dog.ts（年齡換算/性別）
 server/api/       ai-report.post.ts（Claude 健康週報，server-only）
 public/           icon.svg, pwa-192/512, apple-touch-icon, favicon

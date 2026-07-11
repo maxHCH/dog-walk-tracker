@@ -4,7 +4,7 @@ import type { PoopInput } from '~/composables/usePoop'
 import { CONSISTENCY_OPTIONS, COLOR_OPTIONS, isCriticalColor } from '~/utils/poop'
 
 // 便便記錄表單 sheet（計劃書 §5.2）
-// 3 步完成：tap 開啟 → 選性狀/顏色 → 儲存。
+// 3 步完成：tap 開啟 → 選形狀/顏色 → 儲存。
 const open = defineModel<boolean>('open', { default: false })
 const emit = defineEmits<{ submit: [input: PoopInput] }>()
 
@@ -46,8 +46,8 @@ async function save() {
             <Icon name="app:poop" /> 記錄便便
           </h2>
 
-          <!-- 性狀 -->
-          <p class="mt-4 mb-2 text-sm font-medium text-muted">性狀</p>
+          <!-- 形狀 -->
+          <p class="mt-4 mb-2 text-sm font-medium text-muted">形狀</p>
           <div class="grid grid-cols-4 gap-2">
             <button
               v-for="opt in CONSISTENCY_OPTIONS"
