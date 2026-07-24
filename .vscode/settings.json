@@ -1,0 +1,7 @@
+{
+  // Vetur 是 Vue 2 時代的擴充套件，看不懂 Vue 3 <script setup> 的 top-level await，
+  // 會誤報 TS1378。本專案由 Vue - Official (Volar) 負責檢查，關掉 Vetur 的驗證。
+  "vetur.validation.script": false,
+  "vetur.validation.template": false,
+  "vetur.validation.style": false
+}

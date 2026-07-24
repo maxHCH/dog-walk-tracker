@@ -84,7 +84,7 @@ export default defineNuxtConfig({
       viewport: 'width=device-width, initial-scale=1, viewport-fit=cover',
       // 關鍵內聯樣式：在打包 CSS 載入前就替 html 鋪上奶油底色，
       // 避免冷啟動／深色模式下先閃一下黑畫面。
-      style: [{ children: 'html{background:#f4eee1}' }],
+      style: [{ textContent: 'html{background:#f4eee1}' }],
       meta: [
         { name: 'theme-color', content: '#0F6E56' },
         { name: 'mobile-web-app-capable', content: 'yes' },
