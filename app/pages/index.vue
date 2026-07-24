@@ -63,7 +63,7 @@ function endWithDuration(minutes: number) {
 
 const greeting = computed(() => {
   const h = new Date().getHours()
-  if (h < 6) return '夜深了'
+  if (h < 5) return '夜深了'
   if (h < 12) return '早安'
   if (h < 18) return '午安'
   return '晚安'
