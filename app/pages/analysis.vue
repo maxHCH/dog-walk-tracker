@@ -33,7 +33,7 @@ async function onGenerate() {
       await refresh()
     }
   } catch (e: any) {
-    errorMsg.value = e?.data?.statusMessage ?? e?.statusMessage ?? '產生失敗，請稍後再試'
+    errorMsg.value = e?.message ?? '產生失敗，請稍後再試'
   } finally {
     generating.value = false
   }

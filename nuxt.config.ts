@@ -72,12 +72,6 @@ export default defineNuxtConfig({
     },
   },
 
-  runtimeConfig: {
-    // 僅 server 端可讀取（不會洩漏到 client bundle）
-    anthropicApiKey: process.env.ANTHROPIC_API_KEY,
-    anthropicModel: process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-6',
-  },
-
   app: {
     head: {
       title: '狗狗散步記錄',

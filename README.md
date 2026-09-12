@@ -13,12 +13,38 @@ Nuxt 4 + Vue 3 + Tailwind + Supabase。
 
 ## AI 健康週報（Phase 3）
 
-- **on-demand**：使用者按鈕觸發 `POST /api/ai-report`（server route），結果快取於 `ai_reports`，前端讀最新一份；可「重新產生」。
-- **API key 不外洩**：`ANTHROPIC_API_KEY` 只在 server 端使用（`runtimeConfig.anthropicApiKey`）。
-- **模型**：`ANTHROPIC_MODEL`（預設 `claude-sonnet-4-6`；可設為 `claude-opus-4-8` 提升分析深度）。
+- **on-demand**：使用者按鈕觸發 Supabase Edge Function `ai-report`（`functions.invoke`），結果快取於 `ai_reports`，前端讀最新一份；可「重新產生」。
+- **API key 不外洩**：`ANTHROPIC_API_KEY` 只存在 Supabase secrets，不在 repo、也不在 client bundle。
+- **模型**：`ANTHROPIC_MODEL`（預設 `claude-sonnet-5`；可設為 `claude-opus-5` 提升分析深度）。
+- **訂閱把關**：`entitlement.ts` 在呼叫 Claude 前檢查訂閱與配額，預設關閉（`AI_PAYWALL_ENABLED` 未設 = 全放行）。
 - **結構化輸出**：用 forced tool use（相容 SDK 0.39）取得 summary／便便評估／活動評估／建議／異常／就醫旗標。
 - **資料不足保護**：少於 2 天或記錄 < 3 筆時不分析，提示「多記幾天再來」，不亂掰。
 - 不需新 migration（`ai_reports` 表已在 `001_init.sql`）。
+
+## Supabase Edge Function
+
+AI 分析跑在 Supabase Edge Function（Deno），不是 Nuxt server。這樣前端不論是網頁或
+之後的原生 App，都打同一支後端。
+
+```
+supabase/functions/
+  _shared/cors.ts          CORS 標頭與 JSON 回應
+  ai-report/
+    index.ts               HTTP handler：驗身分 → 把關 → 撈資料 → 問 Claude → 寫入
+    aggregate.ts           近 7 天資料彙整（純函式）
+    entitlement.ts         訂閱／配額把關（預設關閉）
+```
+
+**部署**（需先安裝 [Supabase CLI](https://supabase.com/docs/guides/cli)）：
+
+```bash
+supabase login
+supabase link --project-ref <你的 project ref>
+supabase secrets set ANTHROPIC_API_KEY=sk-ant-...
+supabase functions deploy ai-report
+```
+
+查看線上 log：`supabase functions logs ai-report`
 
 ## PWA
 
