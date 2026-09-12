@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { DogInput } from '~/composables/useDog'
-import { formatDuration } from '~/utils/time'
+import { splitDuration } from '~/utils/time'
 import { ageFromBirthYear, genderLabel } from '~/utils/dog'
 
 // 首頁：今日摘要（計劃書 §4 index.vue）
@@ -17,6 +17,10 @@ const { data: summary, refresh, pending } = await useAsyncData(
   'today', () => fetchToday(), { watch: [user] },
 )
 await useAsyncData('dog', () => fetchDog(), { watch: [user] })
+
+// 今日總時長：拆成數值＋單位，滿一小時顯示「1:25 小時」而非 1:25:30
+const durValue = computed(() => splitDuration(summary.value?.totalDurationSec ?? 0).value)
+const durUnit = computed(() => splitDuration(summary.value?.totalDurationSec ?? 0).unit)
 
 // 從散步頁返回、或 App 由背景回到前景時刷新數字
 const nowTs = ref(Date.now())
@@ -204,7 +208,13 @@ const today = new Intl.DateTimeFormat('zh-TW', { month: 'long', day: 'numeric', 
       <p class="eyebrow mb-3.5 text-muted">今日總覽</p>
       <div class="grid grid-cols-2 gap-3">
         <StatsCard tone="walk" icon="lucide:footprints" label="今日散步" :value="summary?.walkCount ?? 0" unit="次" />
-        <StatsCard tone="walk" icon="lucide:timer" label="總時長" :value="formatDuration(summary?.totalDurationSec ?? 0)" />
+        <StatsCard
+          tone="walk"
+          icon="lucide:timer"
+          label="總時長"
+          :value="durValue"
+          :unit="durUnit"
+        />
         <StatsCard tone="poop" icon="app:poop" label="今日便便" :value="summary?.poopCount ?? 0" unit="次" />
         <StatsCard
           :tone="(summary?.abnormalPoopCount ?? 0) > 0 ? 'alert' : 'poop'"

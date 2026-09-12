@@ -14,12 +14,14 @@ onMounted(() => {
 onUnmounted(() => clearInterval(timer))
 
 const elapsed = computed(() => formatDuration(diffSec(props.startedAt, now.value)))
+// 滿一小時後變成 H:MM:SS，窄螢幕會超出寬度 → 縮一級字
+const sizeClass = computed(() => (elapsed.value.length > 5 ? 'text-6xl' : 'text-7xl'))
 </script>
 
 <template>
   <div class="text-center">
     <div class="text-sm font-medium text-walk">散步中</div>
-    <div class="mt-2 font-bold tabular-nums text-walk leading-none text-7xl">
+    <div class="mt-2 font-bold tabular-nums text-walk leading-none" :class="sizeClass">
       {{ elapsed }}
     </div>
   </div>
