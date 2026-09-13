@@ -55,6 +55,7 @@ struct WalkView: View {
         // 觸發點 2：畫面出現（含冷啟動）
         .task {
             store.sync.startNetworkMonitoring()
+            store.resumeTrackingIfNeeded(hasActiveWalk: activeWalk != nil)
             await syncNow()
         }
         // 觸發點 3：從背景回到前景
@@ -121,6 +122,20 @@ struct WalkView: View {
             }
             .padding(.top, 8)
 
+            // 即時距離
+            Label(formatDistance(store.location.distanceM), systemImage: "location.fill")
+                .font(.title3.weight(.bold))
+                .monospacedDigit()
+                .foregroundStyle(Color.walk)
+                .padding(.top, 14)
+
+            if let hint = store.location.hint {
+                Text(hint)
+                    .font(.caption)
+                    .foregroundStyle(Color.muted)
+                    .padding(.top, 4)
+            }
+
             Button {
                 showPoopSheet = true
             } label: {
@@ -132,7 +147,7 @@ struct WalkView: View {
                     .foregroundStyle(.white)
                     .clipShape(RoundedRectangle(cornerRadius: 18))
             }
-            .padding(.top, 44)
+            .padding(.top, 36)
 
             Text("本次已記錄 \(walk.poops.count) 次")
                 .font(.subheadline)

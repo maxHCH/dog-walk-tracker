@@ -9,12 +9,14 @@ import SwiftData
 @Observable
 final class WalkStore {
     let sync = SyncService()
+    let location = LocationService()
 
     /// 開始散步。回傳新建立的記錄，本機立刻就有完整資料。
     @discardableResult
     func startWalk(userID: UUID, dogName: String, in context: ModelContext) -> Walk {
         let walk = Walk(userID: userID, dogName: dogName)
         context.insert(walk)
+        location.start()
         save(context)
         push(userID: userID, in: context)
         return walk
@@ -23,8 +25,13 @@ final class WalkStore {
     /// 結束散步：補上結束時間與時長。
     func endWalk(_ walk: Walk, note: String?, energy: EnergyLevel?, in context: ModelContext) {
         let endedAt = Date()
+        let gps = location.snapshot()
+        location.stop()
+
         walk.endedAt = endedAt
         walk.durationSec = max(0, Int(endedAt.timeIntervalSince(walk.startedAt)))
+        walk.distanceM = gps.distanceM
+        walk.routeData = gps.routeData
         walk.note = note?.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty
         walk.energy = energy
         // 內容變了就要重推一次。upsert 會更新同一個 id 的既有列。
@@ -54,6 +61,14 @@ final class WalkStore {
         save(context)
         push(userID: userID, in: context)
         return poop
+    }
+
+    /// App 被滑掉後重開，但散步還在進行中時呼叫，讓後半段路線仍被記錄。
+    /// 已知限制：被中斷前累積的距離拿不回來，所以距離會偏低（時長不受影響）。
+    /// 正解是邊走邊把路線寫進本機，留待之後處理。
+    func resumeTrackingIfNeeded(hasActiveWalk: Bool) {
+        guard hasActiveWalk, location.status == .idle else { return }
+        location.start()
     }
 
     // MARK: - 內部
