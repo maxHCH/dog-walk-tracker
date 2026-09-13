@@ -7,6 +7,7 @@ struct WalkView: View {
     let userID: UUID
 
     @Environment(\.modelContext) private var context
+    @Environment(\.scenePhase) private var scenePhase
     @Environment(AuthModel.self) private var auth
     @Environment(WalkStore.self) private var store
 
@@ -51,7 +52,19 @@ struct WalkView: View {
                 )
             }
         }
-        .task { store.sync.refreshPendingCount(userID: userID, in: context) }
+        // 觸發點 2：畫面出現（含冷啟動）
+        .task {
+            store.sync.startNetworkMonitoring()
+            await syncNow()
+        }
+        // 觸發點 3：從背景回到前景
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active { Task { await syncNow() } }
+        }
+        // 觸發點 4：斷線後恢復連線
+        .onChange(of: store.sync.isOnline) { _, online in
+            if online { Task { await syncNow() } }
+        }
     }
 
     // MARK: - 尚未開始
@@ -146,12 +159,22 @@ struct WalkView: View {
 
     // MARK: - 狀態列（同步狀態與登出）
 
+    private func syncNow() async {
+        await store.sync.pushPending(userID: userID, in: context)
+    }
+
     private var statusBar: some View {
         HStack {
             if store.sync.pendingCount > 0 {
-                Label("\(store.sync.pendingCount) 筆待同步", systemImage: "arrow.triangle.2.circlepath")
+                // 也可以手動點一下重試，不必等自動觸發
+                Button { Task { await syncNow() } } label: {
+                    Label(
+                        store.sync.isSyncing ? "同步中…" : "\(store.sync.pendingCount) 筆待同步",
+                        systemImage: "arrow.triangle.2.circlepath"
+                    )
                     .font(.caption)
                     .foregroundStyle(Color.clay)
+                }
             } else {
                 Label("已同步", systemImage: "checkmark.icloud")
                     .font(.caption)

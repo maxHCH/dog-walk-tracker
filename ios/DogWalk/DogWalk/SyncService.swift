@@ -1,4 +1,5 @@
 import Foundation
+import Network
 import SwiftData
 import Supabase
 
@@ -7,8 +8,13 @@ import Supabase
 // 方向是單向的：本機是真相，這裡只負責「推上去」，不回拉。
 // 所以不需要衝突解決——手機是唯一的寫入端（網頁版已降級為檢視工具）。
 //
-// 觸發時機：每次本機寫入之後、以及 App 回到前景時。失敗就原地留著，
-// syncedAt 保持 nil，下次再試——這就是離線可用的全部祕密。
+// 觸發時機有四個，缺一個就會出現「東西卡在本機不上去」：
+//   1. 每次本機寫入之後
+//   2. 畫面出現時（App 冷啟動）
+//   3. App 從背景回到前景
+//   4. 網路從斷線恢復 ←— 這個最容易漏，但正是離線後最常見的情境：
+//      App 一直開著沒動，Wi-Fi 回來了，前面三個都不會觸發
+// 失敗就原地留著，syncedAt 保持 nil，下次再試。
 @MainActor
 @Observable
 final class SyncService {
@@ -16,8 +22,26 @@ final class SyncService {
     private(set) var pendingCount = 0
     /// 最近一次同步失敗的原因。離線時會有值，但不該打擾使用者——記錄仍然安全地在本機。
     private(set) var lastErrorMessage: String?
+    /// 目前是否有網路。變成 true 時畫面會據此觸發一次補推。
+    private(set) var isOnline = true
+
+    private let monitor = NWPathMonitor()
+    private var isMonitoring = false
 
     // MARK: - 對外
+
+    /// 開始監看連線狀態。重複呼叫安全（畫面每次出現都會呼叫）。
+    func startNetworkMonitoring() {
+        guard !isMonitoring else { return }
+        isMonitoring = true
+        monitor.pathUpdateHandler = { path in
+            let online = path.status == .satisfied
+            Task { @MainActor [weak self] in
+                self?.isOnline = online
+            }
+        }
+        monitor.start(queue: DispatchQueue(label: "dogwalk.network.monitor"))
+    }
 
     /// 推送所有待同步記錄。任何失敗都不會丟資料，只是留待下次。
     func pushPending(userID: UUID, in context: ModelContext) async {
