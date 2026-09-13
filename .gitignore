@@ -27,3 +27,6 @@ xcuserdata/
 # Swift Package Manager
 .build/
 .swiftpm/
+
+# iOS 機密（對應 web/.env）
+ios/DogWalk/DogWalk/Secrets.swift
