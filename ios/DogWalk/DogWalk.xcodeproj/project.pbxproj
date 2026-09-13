@@ -14,9 +14,22 @@
 		AE80706C30562B3700DE0655 /* DogWalk.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DogWalk.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		AE807096305686CF00DE0655 /* Exceptions for "DogWalk" folder in "DogWalk" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = AE80706B30562B3700DE0655 /* DogWalk */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		AE80706E30562B3700DE0655 /* DogWalk */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				AE807096305686CF00DE0655 /* Exceptions for "DogWalk" folder in "DogWalk" target */,
+			);
 			path = DogWalk;
 			sourceTree = "<group>";
 		};
@@ -265,6 +278,9 @@
 				DEVELOPMENT_TEAM = BNFPLHB66Z;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = DogWalk/Info.plist;
+				INFOPLIST_KEY_LSApplicationCategoryType = "";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "記錄散步路線與距離，只在你按下「開始散步」後追蹤。";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -298,6 +314,9 @@
 				DEVELOPMENT_TEAM = BNFPLHB66Z;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = DogWalk/Info.plist;
+				INFOPLIST_KEY_LSApplicationCategoryType = "";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "記錄散步路線與距離，只在你按下「開始散步」後追蹤。";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
