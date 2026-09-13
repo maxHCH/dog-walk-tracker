@@ -1,4 +1,5 @@
 import SwiftUI
+import SwiftData
 
 @main
 struct DogWalkApp: App {
@@ -13,5 +14,8 @@ struct DogWalkApp: App {
                 // 在最外層啟動監聽，App 活著就一直聽
                 .task { await auth.observeAuthChanges() }
         }
+        // 本機資料庫。SwiftData 會自動建檔與做 schema migration，
+        // 我們只要宣告有哪些 @Model。
+        .modelContainer(for: [Walk.self, Poop.self])
     }
 }
