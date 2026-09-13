@@ -19,6 +19,9 @@ final class AuthModel {
     /// 刻意在這裡轉出字串，讓畫面層不必 import Supabase、也不必認識 Session 型別。
     var userEmail: String? { session?.user.email }
 
+    /// 目前登入者的 id。所有本機查詢與寫入都要帶上它（本機版的 RLS）。
+    var userID: UUID? { session?.user.id }
+
     /// 持續監聽登入狀態變化。由 root view 的 .task 啟動，App 存活期間不會結束。
     ///
     /// authStateChanges 一被訂閱就會先送出一個 .initialSession 事件
