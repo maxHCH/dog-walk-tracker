@@ -15,3 +15,15 @@ node_modules
 .DS_Store
 *.log
 .vercel
+
+# Xcode
+DerivedData/
+build/
+*.xcuserstate
+xcuserdata/
+*.xcscmblueprint
+*.xccheckout
+
+# Swift Package Manager
+.build/
+.swiftpm/
